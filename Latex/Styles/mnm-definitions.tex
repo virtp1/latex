@@ -1,5 +1,5 @@
 %
-% LaTeX-Rahmen für Arbeiten am Lehrstuhl Hegering
+% LaTeX-Rahmen fÃ¼r Arbeiten am Lehrstuhl Hegering
 %
 % Harald Roelle, 2001,2002
 %
@@ -40,12 +40,12 @@
 \fi%
 
 % \usepackage{a4wide}        % weniger Rand  % koenig
-\usepackage{url}           % URL's (z.B. in Literatur) schöner formatieren
+\usepackage{url}           % URL's (z.B. in Literatur) schÃ¶ner formatieren
 % \usepackage{tocbibind}     % Literaturverzeichnis erscheint im Inhaltsverz.
 \usepackage{supertabular}  % Besonders flexible und grosse Tabellen
 \usepackage{makeidx}       % unterstuetzt \makeindex
 \usepackage{picins}        % (kleine) Bilder vom Text umfliessen lassen (neu)
-% \usepackage{mdwlist}       % für (engere) itemize*-Umgebungen  % koenig
+% \usepackage{mdwlist}       % fÃ¼r (engere) itemize*-Umgebungen  % koenig
 \usepackage{multicol}
 % \usepackage{rotating}  % koenig
 % \usepackage{epsfig}    % koenig
@@ -54,13 +54,13 @@
 \usepackage{wrapfig}
 \usepackage{ifthen}
 
-%\usepackage{tabularx} % für Tabellen automagischer Feldbreiten berechnung
-%\usepackage{multirow} % für Tabellenfelder, die sich über mehrere Zeilen erstrecken
+%\usepackage{tabularx} % fÃ¼r Tabellen automagischer Feldbreiten berechnung
+%\usepackage{multirow} % fÃ¼r Tabellenfelder, die sich Ã¼ber mehrere Zeilen erstrecken
 %\usepackage{subfigure} % um mehrere Abbildungen in einer figure-Umgebung zu strukturieren
-%\usepackage{paralist} % für kompakte und nutzerdefinierte itemize und enumerate umgebungen
+%\usepackage{paralist} % fÃ¼r kompakte und nutzerdefinierte itemize und enumerate umgebungen
 
 \ifLANGDE%
-  \usepackage[german]{nomencl}       % Abkürzungsverzeichnis
+  \usepackage[german]{nomencl}       % AbkÃ¼rzungsverzeichnis
   \ifISGLOSS%
     \renewcommand{\nomname}{Glossar}%
   \else%
@@ -68,7 +68,7 @@
   \fi%
 \fi%
 \ifLANGEN%
-  \usepackage[english,compatible]{nomencl}       % Abkürzungsverzeichnis
+  \usepackage[english,compatible]{nomencl}       % AbkÃ¼rzungsverzeichnis
   \ifISGLOSS%
     \renewcommand{\nomname}{Glossary}%
   \else%
@@ -92,19 +92,19 @@
 %
 % \usepackage[iso]{umlaute}  % koenig
 
-\usepackage[latin1]{inputenc}
+\usepackage[utf8]{inputenc}
 
 
 %
-% Ermöglicht den Pretty-Print der Programmcodes
+% ErmÃ¶glicht den Pretty-Print der Programmcodes
 %
 \usepackage{listings}
 %\usepackage[breaklines]{listings}
 %
-% Standards für die Ausgabe der Pretty-Prints !!! SMALL !!!
+% Standards fÃ¼r die Ausgabe der Pretty-Prints !!! SMALL !!!
 %
-\lstset{basicstyle=\small\ttfamily, keywordstyle=\bfseries,
-  commentstyle=\slshape, stringstyle=\itshape,
+ \lstset{basicstyle=\small\ttfamily, keywordstyle=\bfseries,
+  commentstyle=\color{blue}, stringstyle=\itshape,
   extendedchars=true}
 % XXXXXXXXXXXXXXXXXXXXXX
 %  labelstyle=\tiny\ttfamily, labelstep=2, labelsep=5pt, extendedchars=true}
@@ -143,7 +143,7 @@
 \fi
 
 %
-% Rudimentäre Kommentar-Makros
+% RudimentÃ¤re Kommentar-Makros
 %
 \usepackage{color}
 
@@ -155,7 +155,7 @@
 \newcommand{\todo}[1]{\textcolor{todocolor}{[TODO: #1]}}
 \newcommand{\note}[1]{\textcolor{notecolor}{[NOTE: #1]}}
 
-%Kommentare für finalen Build ausschalten:
+%Kommentare fÃ¼r finalen Build ausschalten:
 %\newcommand{\fixme}[1]{}
 %\newcommand{\todo}[1]{}
 %\newcommand{\note}[1]{}
@@ -214,7 +214,7 @@
 
 %=============================================================================================
 %
-% Abkürzungsverzeichnis und Glossar
+% AbkÃ¼rzungsverzeichnis und Glossar
 %
 
 \newcommand{\newAbbrev}[4][X]{%
@@ -264,7 +264,7 @@
 %
 
 %
-% Umgebung für Listings
+% Umgebung fÃ¼r Listings
 %
   \let\verbatim\relax%
   \gdef\wasVerbatimSetupGiven{X}%
@@ -272,13 +272,23 @@
   \newcommand{\internalDirtyHackToGetLabel}{}%
   \newcommand{\setupVerbatim}[1]{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{language=#1,frame=,caption={[]}}%
+    \lstset{language=#1,frame=,basicstyle=,caption={[]}}%
+    \gdef\wasVerbatimSetupGiven{}%
+  }%
+  \newcommand{\setupVerbatimBash}{%
+    \renewcommand{\internalDirtyHackToGetCaption}{X}%
+    \lstset{language=bash,frame=,basicstyle=, caption={[]}}%
+    \gdef\wasVerbatimSetupGiven{}%
+  }%
+  \newcommand{\setupVerbatimOut}{%
+    \renewcommand{\internalDirtyHackToGetCaption}{X}%
+    \lstset{language=,frame=,basicstyle=\color{blue},caption={[]}}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \newcommand{\setupVerbatimCaption}[3]{%
     \renewcommand{\internalDirtyHackToGetCaption}{#2}%
     \renewcommand{\internalDirtyHackToGetLabel}{#3}%
-    \lstset{language=#1,captionpos=t,frame=tb}%
+    \lstset{language=#1,basicstyle=,captionpos=t,frame=tb}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \lstnewenvironment{verbatim}[1][]{%
@@ -314,7 +324,7 @@
 }%
 
 %
-% Umgebung für Beispiele
+% Umgebung fÃ¼r Beispiele
 %
 \newenvironment{quoteExample}[0]{%
   \begin{quotation}%
@@ -330,7 +340,7 @@
 %
 
 %
-% Umgebung für Definitionslisten mit festem Einzug
+% Umgebung fÃ¼r Definitionslisten mit festem Einzug
 %
 \newcommand{\deflabel}[1]{\textbf{#1}}%
 \newenvironment{descriptionIndent}[1][2cm]{%
@@ -437,7 +447,7 @@
     %\input{lmu_titel}%
   \fi%
   
-  % Erklärung
+  % ErklÃ¤rung
   %\input{erklaerung}%
   
   % Abstract
@@ -450,7 +460,7 @@
 }
 
 %
-% Übergang von Verzeichnissen zum Hauptteil
+% Ãœbergang von Verzeichnissen zum Hauptteil
 %
 \newcommand{\setupMainPart}[0]{%
   \cleardoublepage%
@@ -459,7 +469,7 @@
 }
 
 %
-% Anhänge
+% AnhÃ¤nge
 %
 \newcommand{\appendixbegin}[0]{%
   \cleardoublepage%

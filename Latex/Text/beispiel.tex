@@ -1,15 +1,15 @@
 \chapter{Dies ist ein Beispieldokument}
-Dieses Dokument soll einen \texttt{kurzen} Überblick über das Arbeiten
-mit \LaTeX \index{\LaTeX} und der Nutzung des verfügbaren Frameworks geben.
+Dieses Dokument soll einen \texttt{kurzen} Ãœberblick Ã¼ber das Arbeiten
+mit \LaTeX \index{\LaTeX} und der Nutzung des verfÃ¼gbaren Frameworks geben.
 
 Dies ist ein Text \glossary{Text} mit Verweisen auf den Glossar.
 
 \nomenclature{$Text$}{Definition}
 
 Grundlegend gilt, dass wir stets um die Weiterentwicklung und
-Aktualisierung dieses Frameworks bemüht sind. Sollten Ihnen Fehler
-oder andere Missstände auffallen, so möchten wir Sie bitten uns diese
-zu melden, damit wir die Möglichkeit zur Nachbesserung haben. Für eine
+Aktualisierung dieses Frameworks bemÃ¼ht sind. Sollten Ihnen Fehler
+oder andere MissstÃ¤nde auffallen, so mÃ¶chten wir Sie bitten uns diese
+zu melden, damit wir die MÃ¶glichkeit zur Nachbesserung haben. FÃ¼r eine
 Benachrichtigung per Email an \url{felde@nm.ifi.lmu.de} sind wir
 dankbar!
 
@@ -21,114 +21,114 @@ Rahmenwerks und nachfolgend eine ganz grobe Einleitung zur Nutzung von
 
 \section{Anforderungen zur Nutzung des Rahmenwerks}
 
-\subsection{Präambel}
-Alle schriftlichen Arbeiten am Lehrstuhl Kranzlmüller sind mit \LaTeX
+\subsection{PrÃ¤ambel}
+Alle schriftlichen Arbeiten am Lehrstuhl KranzlmÃ¼ller sind mit \LaTeX
 \index{\LaTeX} zu erstellen. Dies hat den Vorteil, dass die Dokumentation auf
 vielen Betriebssystemplattformen einfach reproduziert und weiterverarbeitet
-werden kann. Um ein einheitliches Layout zu gewährleisten, ist weiter dieser
-zur Verfügung gestellte Style in nicht abgeänderter Form zu verwenden.
+werden kann. Um ein einheitliches Layout zu gewÃ¤hrleisten, ist weiter dieser
+zur VerfÃ¼gung gestellte Style in nicht abgeÃ¤nderter Form zu verwenden.
 
-Das vorliegende Archiv enthält neben den LaTeX-Styles auch noch ein
+Das vorliegende Archiv enthÃ¤lt neben den LaTeX-Styles auch noch ein
 Rahmenwerk, welches die Arbeit unter Linux vereinfachen soll. Das
 gesamte Framework wird stetig weiterentwickelt und
-verbessert. Deswegen sind wir über jeden per Email gemeldeten Fehler
+verbessert. Deswegen sind wir Ã¼ber jeden per Email gemeldeten Fehler
 und Missstand an \url{felde@nm.ifi.lmu.de} dankbar.
 
 
 \subsection{Zur Nutzung}
-Dieses Paket ist für die Nutzung unter Linux konzipiert. Es basiert
-auf \texttt{pdflatex} und enthält einige hilfreiche Funktionen, die
+Dieses Paket ist fÃ¼r die Nutzung unter Linux konzipiert. Es basiert
+auf \texttt{pdflatex} und enthÃ¤lt einige hilfreiche Funktionen, die
 zum Teil in Kapitel \ref{sec:nutzung} kurz umrissen werden.
 
-Die Nutzung in anderen Umgebungen ist prinzipiell möglich, wird von
-uns aber nicht weiter unterstützt. Bei der Erstellung von Arbeiten in
+Die Nutzung in anderen Umgebungen ist prinzipiell mÃ¶glich, wird von
+uns aber nicht weiter unterstÃ¼tzt. Bei der Erstellung von Arbeiten in
 anderen Laufzeitumgebungen ist jedoch darauf zu achten, dass die hier
 gemachten Layout-Vorgaben strikt eingehalten werden.
 
 \subsubsection{Verzeichnisstruktur des Archivs}
 Das vorliegende Archiv hat eine bestimmte Verzeichnisstruktur, die
-unbedingt eingehalten werden muss, da sämtliche Arbeiten am Lehrstuhl
-Kranzlmüller durch ein Publikationsverwaltungssystem veröffentlicht
+unbedingt eingehalten werden muss, da sÃ¤mtliche Arbeiten am Lehrstuhl
+KranzlmÃ¼ller durch ein Publikationsverwaltungssystem verÃ¶ffentlicht
 werden. Dieses System erfordert unbedingt die vorgegebende
 Struktur. Weitere Informationen hierzu finden sich auf unseren
 Internetseiten.
 
 \subsubsection{Kompilieren des Dokuments}
-Für das Kompilieren der Ausarbeitung stehen maßgeblich 2 Makefiles zur
-Verfügung. Durch ein Aufruf von \texttt{make} im Verzeichnis
-.../Dokumentation/Latex/ wird das Dokument ausschließlich
-kompiliert. Soll zusätzlich zum kompilieren des Dokuments auch die
+FÃ¼r das Kompilieren der Ausarbeitung stehen maÃŸgeblich 2 Makefiles zur
+VerfÃ¼gung. Durch ein Aufruf von \texttt{make} im Verzeichnis
+.../Dokumentation/Latex/ wird das Dokument ausschlieÃŸlich
+kompiliert. Soll zusÃ¤tzlich zum kompilieren des Dokuments auch die
 Verteilung der erzeugten Dokumente auf die richtigen Verzeichnisse
 unter Beachtung der korrekten Dateinamengebung geschehen, so muss
 \texttt{make} im Verzeichnis .../Dokumentation/ aufgerufen
 werden. Hierbei ist zu beachten, dass in der Datei
-\texttt{Makefile.DEF} ein gültiger Schlüssel für die Variable \glqq
-MASTER\grqq\ eingetragen worden ist. Einen eindeutigen Schlüssel
+\texttt{Makefile.DEF} ein gÃ¼ltiger SchlÃ¼ssel fÃ¼r die Variable \glqq
+MASTER\grqq\ eingetragen worden ist. Einen eindeutigen SchlÃ¼ssel
 erhalten Sie bei Ihrem jeweiligen Betreuer der Arbeit.
 
 
 \section{Nutzung von \LaTeX\ in Verbindung mit dem Rahmenwerk} 
 \label{sec:nutzung}
-Nachfolgend wird nur ein kleiner Überblick über ganz grundlegende
-Möglichkeiten von \LaTeX \index{\LaTeX} gegeben. Für weitergehende
+Nachfolgend wird nur ein kleiner Ãœberblick Ã¼ber ganz grundlegende
+MÃ¶glichkeiten von \LaTeX \index{\LaTeX} gegeben. FÃ¼r weitergehende
 Informationen sei an dieser Stelle auf Kapitel \ref{subsec:howto}
 verwiesen.
 
 
 \subsection{Gliederung von Dokumenten}
 Um ein Kapitel zu erzeugen wird der Befehl \textbackslash
-chapter\{...\} verwendet. Unterkapitel können mit \textbackslash
-section\{...\}, \textbackslash subsection\{...\} usw. eingefügt
+chapter\{...\} verwendet. Unterkapitel kÃ¶nnen mit \textbackslash
+section\{...\}, \textbackslash subsection\{...\} usw. eingefÃ¼gt
 werden.
 
 Ein Absatz wird durch eine Leerzeile im Quelltext erreicht.
 
-Fußnoten\footnote{Dies ist eine Fußnote.} können mit dem Befehl
+FuÃŸnoten\footnote{Dies ist eine FuÃŸnote.} kÃ¶nnen mit dem Befehl
 \textbackslash footnote\{...\} generiert werden.
 
 
-\subsection{Einfügen von Bildern}
+\subsection{EinfÃ¼gen von Bildern}
 \includeParpic{l}{width=0.2\textwidth}{demo_xosview}{demoParPic}{Um\-flos\-sene
 PNG-Grafik}
 
 \includeParPic{r}{.3\textwidth}{width=0.2\textwidth}{demo_xosview}{demoParPic_neu}{Um\-flos\-sene
 PNG-Grafik}
 
-Um eine Grafik wie Abbildung \ref{fig:demoGif} in das Dokument einzufügen, wird
+Um eine Grafik wie Abbildung \ref{fig:demoGif} in das Dokument einzufÃ¼gen, wird
 der Befehl \textbackslash includeFigure \{\} \{\} \{\} \{\} \{\} verwendet. Die
 Parameter sind dabei von links nach rechts betrachtet: \glqq
-Positionsangabe\grqq, \glqq Größenangabe\grqq, \glqq Dateiname\grqq\ (ohne
+Positionsangabe\grqq, \glqq GrÃ¶ÃŸenangabe\grqq, \glqq Dateiname\grqq\ (ohne
 Erweiter\-ung), \glqq label\grqq und \glqq Caption\grqq (eine kurze Beschreibung
 der Grafik). Alle Bilddateien sind im Verzeichnis
 .../Dokumentation/Latex/Bilder/ abzulegen. Bevorzugt sollten Vektorgrafiken im
 PDF-Format eingepflegt werden. Es werden jedoch auch andere Bildformate wie
 z.B. \texttt{*.fig}, \texttt{*.dia}, \texttt{*.svg}, \texttt{*.png},
 \texttt{*.gif}, \texttt{*.jpg}, \texttt{*.tif}, \texttt{*.pdf} und
-\texttt{*.eps} unterstützt. Abbildung \ref{fig:demoGif} zeigt ein Beispiel für
+\texttt{*.eps} unterstÃ¼tzt. Abbildung \ref{fig:demoGif} zeigt ein Beispiel fÃ¼r
 das Einbinden einer PNG-Grafik.
 
-Vom Text umflossene Bilder können mit dem Kommando \textbackslash
+Vom Text umflossene Bilder kÃ¶nnen mit dem Kommando \textbackslash
 includeParpic \{\} \{\} \{\} \{\} \{\} eingebettet werden. Die
 Parameter sind dabei mit oben genannten identisch. Abbildung
-\ref{fig:demoParPic} zeigt ein Beispiel dafür.
-Als Alternative steht außerdem der Befehl \textbackslash includeParPic
-\{\} \{\} \{\} \{\} \{\} \{\}  (zwei ,,P'') zur Verfügung.  Der zusätzliche Parameter
-gegenüber \textbackslash includeParpic dient dazu Platz (in der Breite) für das Bild zu reservieren.
-Abbildung~\ref{fig:demoParPic_neu} zeigt ein Beispiel, in dem ein größerer Abstand zwischen  Bildrand und Fließtext gewählt wurde als in Abbildung~\ref{fig:demoParPic}.
+\ref{fig:demoParPic} zeigt ein Beispiel dafÃ¼r.
+Als Alternative steht auÃŸerdem der Befehl \textbackslash includeParPic
+\{\} \{\} \{\} \{\} \{\} \{\}  (zwei ,,P'') zur VerfÃ¼gung.  Der zusÃ¤tzliche Parameter
+gegenÃ¼ber \textbackslash includeParpic dient dazu Platz (in der Breite) fÃ¼r das Bild zu reservieren.
+Abbildung~\ref{fig:demoParPic_neu} zeigt ein Beispiel, in dem ein grÃ¶ÃŸerer Abstand zwischen  Bildrand und FlieÃŸtext gewÃ¤hlt wurde als in Abbildung~\ref{fig:demoParPic}.
 
-%Außerdem können hier
-%mehrere Attribute statt der einfachen Bildgröße angegeben werden.  Die
+%AuÃŸerdem kÃ¶nnen hier
+%mehrere Attribute statt der einfachen BildgrÃ¶ÃŸe angegeben werden.  Die
 %Parameter sind demnach: \glqq Positionsangabe\grqq, \glqq
 %Breitenreservierung\grqq, \glqq Bildattribute\glqq, \glqq label\grqq, \glqq
 %Dateiname\grqq und \glqq Caption\grqq. Abbildung \ref{fig:demoParPic} zeigt ein
-%Beispiel dafür.
+%Beispiel dafÃ¼r.
 
 \includeFigure{t}{width=0.15\textwidth}{demo_clock}{demoGif}{Eine
   einfache PixelGrafik als PNG}
 
-\subsection{Einfügen von Sourcecode-Beispielen}
-In der Datei .../Dokumentation/Latex/main.tex muss man für jede
-verwendeten Quellcodetyp die entsprechenden Definition für die
+\subsection{EinfÃ¼gen von Sourcecode-Beispielen}
+In der Datei .../Dokumentation/Latex/main.tex muss man fÃ¼r jede
+verwendeten Quellcodetyp die entsprechenden Definition fÃ¼r die
 Syntaxhervorhebung geladen werden. Folgende Kommandos werden in diesem
 Beispiel verwendet:
 
@@ -138,10 +138,10 @@ Beispiel verwendet:
 \lstloadlanguages{java}
 \end{verbatim}
 
-Die zur Verfügung stehenden Definitionen sind aus \cite{hein99} ersichtlich.
+Die zur VerfÃ¼gung stehenden Definitionen sind aus \cite{hein99} ersichtlich.
 
 \subsubsection{Quellcode direkt im Text}
-Um Quellcode direkt im Text verwenden zu können gibt es eine
+Um Quellcode direkt im Text verwenden zu kÃ¶nnen gibt es eine
 spezielle Umgebung, die hier benutzt worden ist:
 
 \setupVerbatimCaption{C}{Hello World in C}{hw-c}
@@ -179,7 +179,7 @@ Das verwendete Kommando lautet:
 Die eingelesene Datei liegt im Verzeichnis
 .../Dokumentation/Latex/Code, welches automatisch durchsucht wird. 
 
-Auch die Einbindung ohne Linien und ohne Bezeichnungstext ist möglich:
+Auch die Einbindung ohne Linien und ohne Bezeichnungstext ist mÃ¶glich:
 
 \inputListing{helloWorld.java}{java}
 
@@ -196,13 +196,13 @@ Jetzt lautet das Kommando:
 Eine Quelle kann man mit dem Befehl \textbackslash cite\{...\}
 zitieren. Dabei entsteht eine Ausgabe der Form \cite{han99a}.
 
-Alle Literaturverweise müssen in einer Bib-TeX Datenbank gespeichert
+Alle Literaturverweise mÃ¼ssen in einer Bib-TeX Datenbank gespeichert
 sein. Zum einen steht am Lehrstuhl eine entsprechende Datenbank zur
-Verfügung, zum anderen können Bib-TeX Einträge in entsprechend
+VerfÃ¼gung, zum anderen kÃ¶nnen Bib-TeX EintrÃ¤ge in entsprechend
 formatierte Dateien im Verzeichnis .../Dokumentation/Latex/Bib/
 gemacht werden. Zu beachten ist, dass je nach Wahl der Datenbank die
 entsprechenden Zeilen in der Datei .../Dokumentation/Latex/main.tex
-auskommentiert werden müssen.
+auskommentiert werden mÃ¼ssen.
 
 In das Literaturverzeichnis werden nur im Dokument zitierte Quellen
 auf\-ge\-nom\-men. Um eine Quelle, die nicht im Text zitiert wurde, mit
@@ -213,18 +213,18 @@ werden. Ein Beispiel ist in der enthaltenen Main-Datei zu finden.
 Um in einem TeX-Dokument auf zuvor definierte Label zu verweisen,
 kommt das Kommando \textbackslash ref zum Einsatz. Um ein Label zu
 setzen wird der Befehl \textbackslash label verwendet. So ist es
-möglich auf z.B. eine Abbildung wie Abbildung \ref{fig:demoGif} oder
+mÃ¶glich auf z.B. eine Abbildung wie Abbildung \ref{fig:demoGif} oder
 auch auf einen Abschnitt des Dokuments wie dieses (Kapitel
 \ref{subsec:zitieren}) zu verweisen.
 
 
-\subsection{Weiterführende Literatur und HowTos}
+\subsection{WeiterfÃ¼hrende Literatur und HowTos}
 \label{subsec:howto}
 Im Internet sind eine Menge HowTos und Einstiegshilfen zu \LaTeX \index{\LaTeX}
-zu finden. Außerdem ist eine Menge brauchbarer Bücher auf dem Markt
-verfügbar. Wir möchten an dieser Stelle auf \cite{kop02} \cite{gms00}
-verweisen. Eine Vielzahl an Büchern ist auch in den Bibliotheken der
-Universität zu finden.
+zu finden. AuÃŸerdem ist eine Menge brauchbarer BÃ¼cher auf dem Markt
+verfÃ¼gbar. Wir mÃ¶chten an dieser Stelle auf \cite{kop02} \cite{gms00}
+verweisen. Eine Vielzahl an BÃ¼chern ist auch in den Bibliotheken der
+UniversitÃ¤t zu finden.
 
 
 %%% Local Variables: 

@@ -1,0 +1,239 @@
+\chapter{Vorarbeit}
+\begin{itemize}
+	\item Update auf Weezy
+	\item symlink \verb#09_linux_xen# in /etc/grub.d erstellt
+	\item \verb#/etc/network/interfaces#: \verb#auto eth0# added
+	\item rootpw changed \verb#123#
+	\item Nameserver in \verb#/etc/resolv.conf# auskommentiert da er grad ned antwortet (Routingproblem und andererseits antwortet er nicht auf Welt) 
+\end{itemize}
+
+\chapter{Storage}
+\section{RAID}
+Erstelle RAID über \verb#sdb2# und \verb#sdc1#
+\setupVerbatim{bash}
+\begin{verbatim}
+apt-get install gdisk
+gdisk /dev/sdb
+# gdisk GPT Partition ~1M Rest Maximal erstellt.
+sgdisk -R=/dev/sdc /dev/sdb
+sgdisk -G /dev/sdb
+# Partitionstabelle kopiert und GUID neu
+mdadm --create /dev/md1 -n 2 -l 1 /dev/sdb2 /dev/sdc2
+#	-n	Number of Devices
+#	-l	RAID Level
+dmesg
+\end{verbatim}
+\setupVerbatimOut
+\begin{verbatim}
+[  253.106706]  sdb: sdb1 sdb2
+[  364.210743]  sdc: sdc1 sdc2
+[  373.659167]  sdb: sdb1 sdb2
+[  701.414204] md: bind<sdb2>
+[  701.415194] md: bind<sdc2>
+[  701.425611] md: raid1 personality registered for level 1
+[  701.425853] bio: create slab <bio-1> at 1
+[  701.425897] md/raid1:md1: not clean -- starting background reconstruction
+[  701.425898] md/raid1:md1: active with 2 out of 2 mirrors
+[  701.425913] md1: detected capacity change from 0 to 499971325952
+[  701.433300]  md1: unknown partition table
+[ 1223.952091] md: resync of RAID array md1
+[ 1223.952093] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 1223.952095] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+[ 1223.952097] md: using 128k window, over a total of 488253248k.
+\end{verbatim}
+
+\section{LVM}
+\todo{Schönen text}
+\setupVerbatim{bash}
+\begin{verbatim}
+#physical volume create
+pvcreate /dev/md1 
+#volumegroup create 
+vgcreate storage /dev/md1
+#2 Logical Volumes fuer VMs
+lvcreate -n guest1 -L 10G storage
+lvcreate -n guest2 -L 20G storage
+\end{verbatim} 
+
+\chapter{Open vSwitch}
+\todo{Schönen text}
+\setupVerbatim{bash}
+\begin{verbatim}
+apt-get instal openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
+modprobe openvswitch-mod
+dmesg
+\end{verbatim} 
+\setupVerbatimOut
+\begin{verbatim}
+[ 2377.104677] openvswitch_mod: Open vSwitch switching datapath 1.4.2, built Apr 30 2013 15:47:50
+\end{verbatim}
+In Datei \verb#/etc/default/openvswitch-switch#: \verb#BRCOMPAT=yes# gesetzt
+\setupVerbatimBash
+\begin{verbatim}
+/etc/init.d/openvswitch-switch start
+ovs-vsctl add-br br-guest
+ovs-vsctl show
+\end{verbatim}
+\setupVerbatimOut
+\begin{verbatim}
+b01c6804-1ad5-4294-98d1-b6aa0a8f6155
+    Bridge br-guest
+        Port br-guest
+            Interface br-guest
+                type: internal
+    ovs_version: "1.4.2"
+\end{verbatim} 
+\setupVerbatimBash
+\begin{verbatim}
+ovs-vsctl add-port br-guest eth0
+ovs-vsctl show
+\end{verbatim}
+\setupVerbatimOut
+\begin{verbatim}
+b01c6804-1ad5-4294-98d1-b6aa0a8f6155
+     Bridge br-guest
+        Port "eth0"
+            Interface "eth0"
+        Port br-guest
+            Interface br-guest
+                type: internal
+    ovs_version: "1.4.2"
+\end{verbatim}
+\begin{itemize}
+\item In \verb#/etc/network/interfaces#: \verb#eth0# durch \verb#br-guest# ersetzt. 
+\item IP auf eth0 zurückgesetzt. 
+\item Mittels Ping die Bridge getestet.
+\end{itemize}
+\chapter{VM}
+\todo{Schönen text}
+\setupVerbatim{bash}
+\begin{verbatim}
+xen-create-image --ip 192.168.10.12  --lvm=storage --hostname=guest1 --vcpus=2 --dist wheezy
+\end{verbatim}
+\setupVerbatimOut
+\begin{verbatim}                                                  
+WARNING                                           
+-------                                           
+                                                  
+  You appear to have a missing vif-script, or network-script, in the
+ Xen configuration file /etc/xen/xend-config.sxp. 
+                                                  
+  Please fix this and restart Xend, or your guests will not be able
+ to use any networking!                           
+                                                  
+WARNING:  No gateway address specified!           
+WARNING:  No netmask address specified!           
+                                                  
+General Information                               
+--------------------                              
+Hostname       :  guest1                          
+Distribution   :  wheezy                          
+Mirror         :  http://cdn.debian.net/debian/   
+Partitions     :  swap            128Mb (swap)    
+                  /               4Gb   (ext3)    
+Image type     :  full                            
+Memory size    :  128Mb                           
+Kernel path    :  /boot/vmlinuz-3.2.0-4-amd64     
+Initrd path    :  /boot/initrd.img-3.2.0-4-amd64  
+                                                  
+Networking Information                            
+----------------------                            
+IP Address 1   : 192.168.10.12 [MAC: 00:16:3E:95:61:15]
+                                                  
+                                                  
+Creating swap on /dev/storage/guest1-swap         
+Done                                              
+                                                  
+Creating ext3 filesystem on /dev/storage/guest1-disk
+Done                                              
+Installation method: debootstrap
+Done
+
+Running hooks
+Done
+
+No role scripts were specified.  Skipping
+
+Creating Xen configuration file
+Done
+
+No role scripts were specified.  Skipping
+Setting up root password
+Generating a password for the new guest.
+All done
+
+
+Logfile produced at:
+         /var/log/xen-tools/guest1.log
+
+Installation Summary
+---------------------
+Hostname        :  guest1
+Distribution    :  wheezy
+IP-Address(es)  :  192.168.10.12 
+RSA Fingerprint :  01:06:31:35:f0:d4:f0:70:54:d3:0f:f2:d4:90:ba:e1
+Root Password   :  JzXi4Ufg
+
+\end{verbatim}
+Passwort auf 123 geändert!
+
+\begin{itemize}
+	\item Memory in \verb#/etc/xen/guest1.cfg# erhöht auf 512 MB
+	\item VM mit \verb#xm create /etc/xen/guest1.cfg# gestartet
+	\item \verb#vif1.0# wurde erstellt und mit br-guest verbunden
+	\item mittels \verb#xm console guest1# in VM gewechselt.
+	\item VM hat Konnectivität. Getestet mittels \verb#ping#.
+	\item \verb#Ctrl+AltGr+]# beendet \verb#xm console#
+\end{itemize}
+
+\section{2. VM sowie Zusätzliche Bridge für VM-Interconnect}
+\begin{itemize}
+	\item \verb#ovs-vsctl add-br br-vmonly#
+	\item \verb#xen-create-image --ip 192.168.10.13  --lvm=storage --hostname=guest2 --vcpus=2 --bridge=br-guest#
+	\item Config von Guest1 angepasst um 2. Intervace auf vmonly zu erhalten. Shutdown - Create
+	\item Guest2 gestartet
+	\item Host lernt Routing und NAT
+	\item iperf auf guest1 zu guest2 \verb#iperf -c 192.168.2.2#
+\end{itemize}
+
+\setupVerbatimOut
+\begin{verbatim}
+------------------------------------------------------------
+Client connecting to 192.168.2.2, TCP port 5001
+TCP window size: 23.5 KByte (default)
+------------------------------------------------------------
+[  3] local 192.168.2.1 port 57804 connected with 192.168.2.2 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  9.21 GBytes  7.91 Gbits/sec
+
+
+------------------------------------------------------------
+Client connecting to 192.168.1.2, TCP port 5001
+TCP window size: 23.5 KByte (default)
+------------------------------------------------------------
+[  3] local 192.168.1.1 port 56132 connected with 192.168.1.2 port 5001
+[ ID] Interval       Transfer     Bandwidth
+[  3]  0.0-10.0 sec  10.6 GBytes  9.12 Gbits/sec
+\end{verbatim}
+tcpdump zeigt interessante Ethernet-Framegrößen 65226. Ping mit höherer MTU funktioniert wenn man Interfaces in Gästen, Bridge unf vifs entsprechend anpasst.
+\setupVerbatimOut
+\begin{verbatim}
+17:45:48.414535 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25535, offset 0, flags [DF], proto TCP (6), length 65212)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14811337:14876497, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
+17:45:48.414540 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25580, offset 0, flags [DF], proto TCP (6), length 65212)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [P.], seq 14876497:14941657, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
+17:45:48.414542 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25625, offset 0, flags [DF], proto TCP (6), length 65212)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14941657:15006817, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
+17:45:48.414559 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54265, offset 0, flags [DF], proto TCP (6), length 52)
+    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x86f4), seq 0, ack 14876497, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
+17:45:48.414571 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54266, offset 0, flags [DF], proto TCP (6), length 52)
+    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x886b), seq 0, ack 14941657, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
+17:45:48.414576 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54267, offset 0, flags [DF], proto TCP (6), length 52)^C
+    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x91f8), seq 0, ack 15006817, win 14327, options [nop,nop,TS val 356977 ecr 396548], length 0
+\end{verbatim}
+
+
+
+
+
+
