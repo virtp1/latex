@@ -1,0 +1,7 @@
+# Master sollte
+# das Kuerzel sein unter dem der Student seine DA bei uns als
+# tar File abgibt, bei einem Bearbeiter die 4 Anfangsbuchstaben des Namens
+# gefolgt vom Jahr der Bearbeitung
+
+MASTER := UNSET
+#MASTER := stud01

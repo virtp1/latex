@@ -1,0 +1,155 @@
+%
+% LaTeX-Rahmen für Arbeiten am Lehrstuhl Hegering
+%
+% Nils gentschen Felde, 01/2006
+%
+% basierend auf Arbeiten von Helmut Reiser, Boris Gruschke,
+% Stephen Heilbronner und Harald Rölle
+%
+
+\documentclass[a4paper,10pt,twoside,DIV14,BCOR14mm]{scrreprt} 
+
+
+% !!!!
+% !!!! Auswählen der Sprache
+% !!!!
+\newif\ifLANGDE\LANGDEtrue\newif\ifLANGEN\LANGENfalse   % aktivieren für Deutsch
+% \newif\ifLANGEN\LANGENtrue\newif\ifLANGDE\LANGDEfalse   % aktivieren für Englisch
+
+
+% !!!!
+% !!!! Auswählen der Uni
+% !!!!
+%\newif\ifTUM\TUMtrue\newif\ifLMU\LMUfalse   % aktivieren für TUM
+\newif\ifLMU\LMUtrue\newif\ifTUM\TUMfalse   % aktivieren für LMU
+
+
+% !!!!
+% !!!! Auswählen des Typs der Ausarbeitung
+% !!!!
+\newcommand{\typeOfThesis}[0]{Diplomarbeit}
+%\newcommand{\typeOfThesis}[0]{Fortgeschrittenenpraktikum}
+%\newcommand{\typeOfThesis}[0]{SEP}
+%\newcommand{\typeOfThesis}[0]{Studienarbeit}
+
+
+% !!!!
+% !!!! Titel der Arbeit
+% !!!!
+\newcommand{\titleOfThesisOne}[0]{Titel von SEP/FoPra/DA}
+\newcommand{\titleOfThesisTwo}[0]{Titel 2. Zeile}
+\newcommand{\titleOfThesisThree}[0]{Titel 3. Zeile}
+
+
+% !!!!
+% !!!! Verfasser der Arbeit
+% !!!!
+\newcommand{\authorOfThesis}[0]{Vorname Nachname}
+
+
+% !!!!
+% !!!! Aufgabensteller
+% !!!!
+\newcommand{\aufgabensteller}[0]{Prof. Dr. Dieter Kranzlm\"{u}ller}
+%\newcommand{\aufgabensteller}[0]{Prof. Dr. Heinz-Gerd Hegering}
+%\newcommand{\aufgabensteller}[0]{Prof. Dr. Claudia Linnhoff-Popien}
+
+
+% !!!!
+% !!!! Betreuer
+% !!!!
+\newcommand{\betreuerOne}[0]{Vorname Name vom ersten Betreuer}
+\newcommand{\betreuerTwo}[0]{Vorname Name vom zweiten Betreuer}
+\newcommand{\betreuerThree}[0]{Vorname Name vom dritten Betreuer}
+
+
+% !!!!
+% !!!! Abgabedatum
+% !!!!
+\newcommand{\abgabeTagZahl}[0]{14}
+\newcommand{\abgabeMonatText}[0]{Juli}
+\newcommand{\abgabeJahrZahl}[0]{2006}
+
+
+% !!!!
+% !!!! Bibtex files auswählen
+% !!!!
+% !!!! Variante nur mit lokalen bibfiles (läuft überall)
+% !!!!
+\newcommand{\bibfiles}[0]{bibfile1}
+% !!!!
+% !!!! Variante inklusive der MNM bibfiles (läuft nur am Lehrstuhl)
+% !!!!
+%\newcommand{\bibfiles}[0]{bibfile1,articles,rfcs,internet-drafts,publikationen,diplomarbeiten,dissertationen,fopras,projekte,books,ref,std,in-proceedings,proceedings,ietf-wgs,omg}
+
+
+% !!!!
+% !!!! Auswählen ob Abkürzungsverzeichnis oder Glossar
+% !!!!  Wenn man ein Glossar benutzt, dann sollten Abkürzungen 
+% !!!!  einfach ins Glossar mitaufgenommen werden.
+% !!!!
+\newif\ifISGLOSS\ISGLOSSfalse   % aktivieren für Abkürzungsverzeichnis
+%\newif\ifISGLOSS\ISGLOSStrue    % aktivieren für Glossar
+
+
+%=============================================================================================
+% Einbinden der MNM-Definitionen
+%=============================================================================================
+
+\input{mnm-definitions}
+\graphicspath{{Bilder/}}
+
+%=============================================================================================
+% Eigene Definitionen
+%=============================================================================================
+
+% Syntax-Definitionen für die Einbindung von Sourcecodes
+\lstloadlanguages{C}
+\lstloadlanguages{java}
+\lstloadlanguages{make}
+
+
+%=============================================================================================
+% Die Arbeit
+%=============================================================================================
+
+\docbegin            % MUSS STEHENBLEIBEN!
+
+
+%
+% Literatur, die nicht direkt im Text zitiert wird.
+%
+\nocite{han99}
+
+
+%
+% Diverse Verzeichnisse
+%
+%\setcounter{tocdepth}{2} % Begrenzen der Verzeichnistiefe
+\tableofcontents     % Inhaltsverzeichnis
+\listoffigures       % Liste aller Abbildungen
+\listoftables        % Liste aller Tabellen
+
+\setupMainPart       % MUSS STEHENBLEIBEN!
+
+%
+% Kapitel
+%
+\input{beispiel}
+
+
+%
+% Anhänge
+%
+
+\appendixbegin       % MUSS STEHENBLEIBEN!
+%\input{...}
+\appendixend         % MUSS STEHENBLEIBEN!
+
+
+\listofAbbrevGloss   % MUSS STEHENBLEIBEN!
+\listofreferences    % MUSS STEHENBLEIBEN!
+\theIndex            % kann weggelassen werden
+
+\docend              % MUSS STEHENBLEIBEN!
+

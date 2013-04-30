@@ -1,0 +1,125 @@
+#
+# LaTeX-Rahmen für Arbeiten am Lehrstuhl Hegering
+#
+# Nils gentschen Felde, 01/2006
+#
+# basierend auf Arbeiten von Harald Rölle, Helmut Reiser, 
+# Boris Gruschke und Stephen Heilbronner
+#
+
+#=====================================================================================
+#
+# path definitions
+#
+
+#
+# local directories
+#
+ABB_DIR   = ./Bilder
+BIB_DIR   = ./Bib
+TEXT_DIR  = ./Text
+CODE_DIR  = ./Code
+STYLE_DIR = ./Styles
+
+#
+# temporary files
+#
+TMP_DIR      = ./tmp_make
+TMP_DIR_PICS = ./tmp_make_pics
+
+#
+# tex paths
+#
+export TEXINPUTS := .//:$(shell pwd)/Styles//:$(shell pwd)/Misc//:/usr/share/texmf//://var/lib/texmf/pdftex/config//:/usr/share/texmf-tetex/tex/latex/koma-script::/usr/share/texmf-tetex/tex/latex/base:/usr/share/texlive-base//:/usr/share/texmf-texlive//:/usr/share/texmf-texlive/tex/latex/graphics//:$(TEXINPUTS)
+export TTHINPUTS := .//:$(shell pwd)/Styles//:$(shell pwd)/Misc//:/usr/share/texmf//
+
+#
+# bibtex paths
+#
+export BSTINPUTS := $(shell pwd)/Styles//:$(TEXINPUTS):/proj/Literatur/Bib//
+export BIBINPUTS := $(shell pwd)/Styles//:$(TEXINPUTS):/proj/Literatur/Bib//
+
+
+#=====================================================================================
+#
+# command definitions
+#
+#  Packages are of SuSE 8.0. For other distributions ymmv.
+#
+
+#
+# standard unix commands
+#
+PSNUP_CMD      := psnup
+GZIP_CMD       := gzip
+FIND_CMD       := find
+GREP_CMD       := grep
+CUT_CMD        := cut
+CAT_CMD        := cat
+TAIL_CMD       := tail
+BASENAME_CMD   := basename
+SED_CMD        := sed
+AWK_CMD        := awk
+EXPR_CMD       := expr
+DIA_CMD        := dia
+
+#
+# tex related
+#
+TEX_CMD        := tex       # part of package tetex
+DVIPS_CMD      := dvips     # part of package tetex
+XDVI_CMD       := xdvi      # part of package tetex
+MAKEINDEX_CMD  := makeindex # part of package tetex
+LATEX_CMD      := latex     # part of package te_latex
+BIBTEX_CMD     := bibtex    # part of package te_latex
+PDFTEX_CMD     := pdftex    # part of package te_pdf
+PDFLATEX_CMD   := pdflatex  # part of package te_pdf
+THUMBPDF_CMD   := thumbpdf  # part of package te_pdf
+
+#
+# ghostscript related
+#
+GS_CMD         := gs        # part of package ghostscript-library
+PS2PDF13_CMD   := ps2pdf13  # part of package ghostscript-library
+
+#
+# ImageMagick related
+#
+MOGRIFY_CMD    := mogrify   # part of package ImageMagick
+CONVERT_CMD    := convert   # part of package ImageMagick
+
+#
+#more conversion tools
+#
+INKSCAPE_CMD	:= inkscape
+
+#
+# xfig related
+#
+FIGTODEV_CMD   := fig2dev   # part of packagetransfig
+
+#
+# Special modified version
+#
+EPSTOPDF_CMD   := ../bin/epstopdf-mnm
+EPSTOPIC_CMD   := ../bin/eps2pic-mnm
+PDFTOPS_CMD    := pdftops
+FIXPS_CMD      := ../bin/fixps-mnm
+
+#
+# not part of SuSE. Download from <http://hutchinson.belmont.ma.us/tth/>
+#
+#TTH_CMD        := /usr/local/mnm/dist/tth/current/bin/tth
+
+
+#=====================================================================================
+#
+# picture dimensions for html
+#
+
+HTML_PREVIEW_PIXEL        := 250
+
+HTML_EPS_MAX_WIDTH_PIXEL  := 800
+HTML_EPS_MAX_HEIGHT_PIXEL := 600
+
+

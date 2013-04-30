@@ -1,0 +1,74 @@
+;; RefTeX parse info file
+;; File: /users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex
+;; User: felde (Nils Otto vor dem gentschen Felde)
+
+(set reftex-docstruct-symbol '(
+
+
+(xr nil "\\\\\\\\\\\\")
+
+(index-tags "idx")
+
+(is-multi t)
+
+(bibview-cache)
+
+(master-dir . "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/")
+
+(label-numbers)
+
+(bof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex")
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 5328 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 5419 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 5508 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 5752 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 5995 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+(index "idx" "\\index{#3}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 6368 "#3" "#3" "#3" "#3" nil)
+
+(index "idx" "\\index{#4}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 6384 "#4" "#4" "#4" "#4" nil)
+
+(index "idx" "\\index{#1#3}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 6409 "#1#3" "#1#3" "#1#3" "#1#3" nil)
+
+(index "idx" "\\index{#1#4}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 6427 "#1#4" "#1#4" "#1#4" "#1#4" nil)
+
+(index "idx" "\\index{#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 7197 "#2" "#2" "#2" "#2" nil)
+
+(index "idx" "\\index{#1#2}%" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" 7222 "#1#2" "#1#2" "#1#2" "#1#2" nil)
+
+("listing:#3" "s" "% \\addtocounter{lstlisting}{1}% \\special{html:<CENTER>}Listing \\thelstlisting: #2\\special{html:</CEN" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+("listing:#4" "s" "% \\begin{rawhtml} <TABLE BORDER=1 CELLSPACING=0 CELLPADDING=4 WIDTH=100\\%> <TR><TD ALIGN=center> " "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+("fig:#4" "f" "NO MATCH FOR CONTEXT REGEXP" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+("fig:#4" "f" "#5" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+("fig:#4" "f" "NO MATCH FOR CONTEXT REGEXP" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+("fig:#4" "s" "% \\parpic[#1]{% \\includegraphics[#2]{#3}% }% \\fi% } % % Abstract der Arbeit % \\newenvironment{DAabst" "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex" nil)
+
+(file-error "hyphenation")
+
+(bof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/tu_titel.tex")
+
+(eof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/tu_titel.tex")
+
+(bof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/lmu_titel.tex")
+
+(eof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/lmu_titel.tex")
+
+(bof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/erklaerung.tex")
+
+(eof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/erklaerung.tex")
+
+(file-error "abstract")
+
+(eof "/users/wiss/felde/tmp/tex-rahmen/studJJ/Dokumentation/Latex/Styles/mnm-definitions.tex")
+))
+

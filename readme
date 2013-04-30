@@ -1,0 +1,74 @@
+Dieser LaTeX-Rahmen unterstützt die Erstellung von Arbeiten am NM-Lehrstuhl.
+
+Alle wichtigen Arbeiten spielen sich im Verzeichnis Latex/ ab.
+
+Die Benutzung des Rahmens erklärt sich am besten, indem man die vorliegende
+Demo-Fassung übersetzt und sich dann PARALLEL die Quellen und den erzeugten
+Text ansieht!
+
+
+Beschreibung des Makefiles
+==========================
+
+In Makefile.DEF werden globale Variablen gesetzt. 
+
+****************************************************
+*
+* Wichtig ist die Variable MASTER, die mit dem Wert
+* des Bibkeys der Arbeit belegt werden muss!
+* 
+* Den Bibkey gibts vom Betreuer!
+*
+****************************************************
+
+Der Aufruf von "make" erzeugt "alles"!
+Ansonsten gibt noch verschiedene andere Targets, z.B.:
+
+<MASTER>.ps:    Erzeugt nur PS-Version
+<MASTER>.pdf:   Erzeugt nur PDF-Version
+clean:          löscht temporäre Dateien
+distclean:      löscht temporäre Dateien und erzeugte Dateien
+
+
+Beschreibung der Dateien:
+=========================
+
++- Makefile      Zentrales Makefile: Steurt die Erzeugung aller Varianten und
+|                legt diese in die entsprechenden Verzeichnisse.
++- Makefile.DEF  Definitions-Makefile: Definiert wichtige Einstellungen.
++- README        "Sie baden gerade Ihre Hände darin"
++- HTML/         Verzeichnis für HTML-Version der Arbeit.
+|
++- Latex/        Verzeichnis für Latex-Quellen der Ausarbeitung.
+|  +- Makefile      Steuert alle Konvertierungen, Erzeugungen, ...
+|  +- Makefile.DEF  Definiert Binaries, ...
+|  +- main.tex      Hauptfile des LaTeX-Rahmens. Hier werden wichtige
+|                   Einstellungen getroffen.
+|  +- Bib/          Verzeichnis für alle Bib-Files.
+|  |  \- bibfile1.bib  Beispiel für Bib-File.
+|  |
+|  +- Bilder/       Verzeichnis für Abbildungen.
+|  |  +- ...
+|  |
+|  +- Code/         Verzeichnis für Quelltexte.
+|  |  +- ...
+|  |
+|  +- Misc/         Verschiedenes.
+|  |  +- abstract.tex     Zusammenfassung der Arbeit.
+|  |  \- hyphenation.tex  Benutzereigene Trennhilfen.
+|  |
+|  +- Styles/       Verzeichnis für LaTeX-Styles.
+|  |  +- ...
+|  |
+|  \- Text/         Verzeichnis für die eigentlichen Texte.
+|     +- ...
+|
++- Other/        Verzeichnis für Dateien in anderen Formaten.
+|
++- PDF/          Verzeichnis für PDF-Version der Arbeit.
+|
++- Postscript/   Verzeichnis für PS-Version der Arbeit.
+|
+\- bin/          Verzeichnis für Hilfsskripte.
+   +- ...
+
