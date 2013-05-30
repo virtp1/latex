@@ -1,0 +1,10 @@
+install:
+  - sudo apt-get install texlive-fonts-extra ttf-inconsolata ttf-droid
+  - sudo apt-get install texlive-xetex texlive-latex-recommended texlive-latex-extra
+
+script:
+  - make
+
+notifications:
+  email:
+    - simon@swine.de
