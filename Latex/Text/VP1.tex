@@ -232,8 +232,207 @@ tcpdump zeigt interessante Ethernet-Framegrößen 65226. Ping mit höherer MTU f
     192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x91f8), seq 0, ack 15006817, win 14327, options [nop,nop,TS val 356977 ecr 396548], length 0
 \end{verbatim}
 
+\chapter{Ata-Over-Ethernet}
 
+\section{Einrichtung Kernel Modul aoe auf pcvirt01 + pcvirt02}
+\setupVerbatimOut
 
+\begin{verbatim}
+# Test ob AOE Kernel unterstützt
+grep ATA_OVER /boot/config-`uname -r`
+CONFIG_ATA_OVER_ETH=m
 
+# Lade AOE Modul
+modprobe aoe
 
+# Einfügen in /etc/modules bei pcvirt01 + pcvirt02,
+# damit Modul beim start geladen wird
+aoe
+\end{verbatim}
 
+\section{Einrichtung vbladed auf pcvirt01}
+
+\setupVerbatimOut
+\begin{verbatim}
+# Guest1 runterfahren (da dessen Blockdevices freigegebenwerden sollen)
+xm shutdown guest1
+
+# Disk und Swap als AOE Target zur Verfügung stellen
+root@pcvirt01:/etc/xen# vbladed 0 1 br-guest /dev/storage/guest1-disk  
+root@pcvirt01:/etc/xen# vbladed 0 2 br-guest /dev/storage/guest1-swap
+
+# und ab damit in die rc.local damit persistent nach reboot
+\end{verbatim}
+
+\section{Einrichtung des Initiators pcvirt02}
+
+\setupVerbatimOut
+\begin{verbatim}
+# Da Interface eth0 noch down auf pcvirt02, wird das zuerst analog,
+# wie auf pcvirt01 konfiguiert (nur ohne OpenVSwitch)
+
+# Schnellmaßnahmen
+brctl addbr br-guest
+brctl addif br-guest eth0
+ifconfig br-guest up
+
+# Erstelle config für /etc/network/interfaces 
+auto br-guest
+iface br-guest inet static
+        address 192.168.1.132
+        netmask 255.255.255.0
+        bridge_ports eth0
+\end{verbatim}
+
+\section{Testen ob ATA-over-Ethernet gefunden wird}
+
+\setupVerbatimOut
+\begin{verbatim}
+# Erkenne AOE 
+root@pcvirt02:~# aoe-discover 
+root@pcvirt02:~# aoe-stat                                                       
+      e0.1         4.294GB br-guest up            
+      e0.2         0.134GB br-guest up  
+\end{verbatim}
+
+\section{Dirty Hack da Ata Initiator sich nicht auf lokales Target verbinden kann (auf pcvirt1)}
+
+\setupVerbatimOut
+\begin{verbatim}
+# Dirty symbolic links auf lokale devices auf pcvirt01
+ln -s /dev/storage/guest1-disk /dev/etherd/e0.1
+ln -s /dev/storage/guest1-swap /dev/etherd/e0.2 
+\end{verbatim}
+
+\chapter{Live Migration einer VM}
+
+\section{Konfiguration von xend auf beiden Rechnern}
+
+\setupVerbatimOut
+\begin{verbatim}
+# Aktiviere Migration in /etc/xen/xend-config.sxp
+< (xend-relocation-server yes)
+< (xend-relocation-hosts-allow '')
+---
+> #(xend-relocation-server no)
+> #(xend-relocation-hosts-allow '')
+
+# Anschließend Neustart von xend
+/etc/init.d/xen restart
+\end{verbatim}
+
+\section{Konfiguration von guest1}
+
+guest1 soll migrierbar gemacht werden. Dazu wurden bereits dessen Blockdevices via Ata-over-Ethernet exportiert. Jetzt müssen diese A-o-E Devices auch in der Xen Konfig
+ verwendet werden.
+\setupVerbatimOut
+\begin{verbatim}
+# Verändere Guest Konfig auf pc-virt01
+disk        = [
+                  'phy:/dev/storage/guest1-disk,xvda2,w',
+                  'phy:/dev/storage/guest1-swap,xvda1,w',
+              ]
+# muss heißen
+disk        = [
+                  'phy:/dev/etherd/e0.1,xvda2,w',
+                  'phy:/dev/etherd/e0.2,xvda1,w',
+              ]
+\end{verbatim}
+
+\section{Live Migration der VM guest1 von pcvirt1 nach pcvirt2}
+
+\subsection{1. Versuch $\Rightarrow$ Bridge fehlt}
+\setupVerbatimOut
+\begin{verbatim}
+# Starte VM auf pcvirt1
+xm create guest01.cfg
+
+# Migriere VM von pcvirt1 nach pcvirt2
+xm migrate --live guest01 192.168.1.132
+\end{verbatim}
+
+Die Migration schlägt fehl, der Maschinenstatus ist verloren. Ursache: Fehlende Brige br-vmonly auf pcvirt2
+\\
+$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft und die Migartion abgebrochen ohne dass der VM State verloren geht
+
+\subsection {2. Versuch $\Rightarrow$ Kernel fehlt}
+\setupVerbatimOut
+\begin{verbatim}
+# Starte VM auf pcvirt1
+xm create guest01.cfg
+
+# Lege 2. Bridge auf pcvirt2 an
+brctl addbr br-vmonly
+
+# Migriere VM von pcvirt1 nach pcvirt2
+xm migrate --live guest01 192.168.1.132
+\end{verbatim}
+
+Migration schlägt wieder fehl. Ursache: VM verwendet neueren Kernel, der auf Zielsystem pcvirt2 nicht verfügbar ist.
+\\
+\\
+\large{\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}}
+
+\subsection {3. Versuch $\Rightarrow$ Falsche Xen Versionen}
+\setupVerbatimOut
+\begin{verbatim}
+# Es wird der alte Kernel für den Guest konfiguiert
+
+# Starte VM auf pcvirt1
+xm create guest01.cfg
+
+# Migriere VM von pcvirt1 nach pcvirt2
+xm migrate --live guest01 192.168.1.132
+\end{verbatim}
+
+Migration schlägt wieder fehl. Ursache: VMs lassen sich bei Xen nur auf der gleichen Version live migrieren. Lediglich eine Live Migration von einer Xen Version zur nächst höheren ist möglich (vgl. \url{http://wiki.xen.org/wiki/Xen_Version_Compatibility})
+\\
+\\
+\Large{\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}}
+
+\subsection {4. Versuch $\surd$ }
+\setupVerbatimOut
+\begin{verbatim}
+# Nun wird die VM auf pcvirt2 gestartet 
+xm create guest01.cfg
+
+# Migriere VM von pcvirt2 nach pcvirt1
+xm migrate --live guest01 192.168.1.131
+\end{verbatim}
+
+Migration erfolgreich, Netwerkdowntime $<$ als 100ms, da \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| keinen Loss anzeigte
+
+\section{Beobachtungen der Migration mit tshark}
+
+\subsection{Erfolgreiche Migration von Xen 4.0 auf 4.1}
+
+Es wird eine Simple TCP Verbindung zwischen beiden Hosts aufgebaut. Dabei meldet sich pcvirt2 mit dem \verb|(receive)| command bei pcvirt1 an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt pcvirt2 an den pcvirt1 den LinuxGuestRecord mit sämtlichen Settings und States der VM. Darauf schickt pcvirt2 die RAM Inhalte von pcvirt1. Den erfolgreichen Empfang quitiert pcvirt2 mit einem \verb|(ok)|.
+
+\setupVerbatimOut
+\begin{verbatim}
+# Von >=pcvirt2 nach <=pcvirt1
+
+> (receive)
+< (ready receive)
+> LinuxGuestRecord
+(domain (domid 9) (cpu_weight 256) (cpu_cap 0) (on_crash restart) (uuid 42ed8dbf-c245-2937-f1fc-b2d6d1620aa2) (bootloader_args ) (vcpus 3) (name guest1) (on_poweroff destroy) (on_reboot restart) (cpus (() () ())) (description ) (bootloader ) (maxmem 512) (memory 512) (shadow_memory 0) (vcpu_avail 7) (features ) (on_xend_start ignore) (on_xend_stop ignore) (start_time 1369930035.4) (cpu_time 4.414449199) (online_vcpus 3) (image (linux (kernel /boot/vmlinuz-2.6.32-5-amd64) (ramdisk /boot/initrd.img-2.6.32-5-amd64) (args 'root=/dev/xvda2 ro ') (superpages 0) (tsc_mode 0) (videoram 4) (pci ()) (nomigrate 0) (notes (HV_START_LOW 18446603336221196288) (FEATURES '!writable_page_tables|pae_pgdir_above_4gb') (VIRT_BASE 18446744071562067968) (GUEST_VERSION 2.6) (PADDR_OFFSET 0) (GUEST_OS linux) (HYPERCALL_PAGE 18446744071578882048) (LOADER generic) (SUSPEND_CANCEL 1) (PAE_MODE yes) (ENTRY 18446744071584211456) (XEN_VERSION xen-3.0)))) (status 2) (state -b----) (store_mfn 1190820) (console_mfn 1190819) (device (vif (bridge br-guest) (uuid 7f0b8aa6-f89d-e27c-3ba4-6db424f66858) (script /etc/xen/scripts/vif-bridge) (ip 192.168.10.12) (mac 00:16:3E:95:DE:AD) (backend 0))) (device (vif (bridge br-vmonly) (uuid aef672ce-c13d-2cb2-1b93-040c26ea87ee) (script /etc/xen/scripts/vif-bridge) (ip 192.168.11.12) (mac 00:16:3E:95:BE:EF) (backend 0))) (device (vbd (protocol x86_64-abi) (uuid 1305fde6-95c3-8716-1e73-418fca163709) (bootable 1) (dev xvda2:disk) (uname phy:/dev/etherd/e0.1) (mode w) (backend 0) (VDI ))) (device (vbd (protocol x86_64-abi) (uuid 1e934d97-a69f-f89d-2c52-78e4cee936b6) (bootable 0) (dev xvda1:disk) (uname phy:/dev/etherd/e0.2) (mode w) (backend 0) (VDI ))) (device (console (protocol vt100) (location 2) (uuid 7a60ec21-8fae-9bb0-7223-b3840d2c3c52))) (change_home_server False))
+>[viele Daten mainly RAMcopy]
+<(ok)
+\end{verbatim}
+
+\subsection{Fehlerhafte Migration von Xen 4.1 auf 4.0}
+
+Es läuft wieder wie im vorherigen Abschnitt ab. Nur dass pcvirt1 und pcvirt2 vertauscht sind. Anstatt (ok) meldet pcvirt2 diese Fehlermeldung zurück.
+\setupVerbatimOut
+\begin{verbatim}
+<(err (type "<class 'xen.xend.XendError.XendError'>") (value '/usr/lib/xen-4.0/bin/xc_restore 24 10 1 2 0 0 0 0 failed'))
+\end{verbatim}
+
+\subsection{Gratuitous ARP der VM IP/Mac}
+
+Nach einer Erfolgreichen Migration muss, damit die Mac Tabellen der beteiligten Switches/Bridges aktuell sindm, Xen noch im Namen der VM einen sog. Gratuitous ARP Request senden dieser sieht so aus:
+
+\setupVerbatimOut
+\begin{verbatim}
+151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
+\end{verbatim}
