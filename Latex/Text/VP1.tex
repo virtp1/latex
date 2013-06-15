@@ -1,4 +1,5 @@
 \chapter{Vorarbeit}
+\label{chap:whezzy_ugprade}
 \begin{itemize}
 	\item Update auf Weezy
 	\item symlink \verb#09_linux_xen# in /etc/grub.d erstellt
@@ -56,6 +57,7 @@ lvcreate -n guest2 -L 20G storage
 \end{verbatim} 
 
 \chapter{Open vSwitch}
+\label{chap:ovs}
 \todo{Schönen text}
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -233,7 +235,7 @@ tcpdump zeigt interessante Ethernet-Framegrößen 65226. Ping mit höherer MTU f
 \end{verbatim}
 
 \chapter{Ata-Over-Ethernet}
-
+\label{chap:aoe}
 \section{Einrichtung Kernel Modul aoe auf pcvirt01 + pcvirt02}
 \setupVerbatimOut
 
@@ -371,7 +373,9 @@ xm migrate --live guest01 192.168.1.132
 Migration schlägt wieder fehl. Ursache: VM verwendet neueren Kernel, der auf Zielsystem pcvirt2 nicht verfügbar ist.
 \\
 \\
-\large{\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}}
+\large
+\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}
+\normalsize
 
 \subsection {3. Versuch $\Rightarrow$ Falsche Xen Versionen}
 \setupVerbatimOut
@@ -388,7 +392,9 @@ xm migrate --live guest01 192.168.1.132
 Migration schlägt wieder fehl. Ursache: VMs lassen sich bei Xen nur auf der gleichen Version live migrieren. Lediglich eine Live Migration von einer Xen Version zur nächst höheren ist möglich (vgl. \url{http://wiki.xen.org/wiki/Xen_Version_Compatibility})
 \\
 \\
-\Large{\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}}
+\Large
+\textbf{$\Rightarrow$ Warum wird das nicht in der Signalling Phase geprüft  \dots}
+\normalsize
 
 \subsection {4. Versuch $\surd$ }
 \setupVerbatimOut
@@ -436,3 +442,288 @@ Nach einer Erfolgreichen Migration muss, damit die Mac Tabellen der beteiligten 
 \begin{verbatim}
 151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
 \end{verbatim}
+
+
+\chapter{VLAN für br-vmonly zwischen zwei Hosts}
+
+Damit guest1 und guest2, wenn beiden nicht auf den selben Hostmaschinen laufen, trotzdem über br-vmlonly kommunizieren können. Muss das LAN in einem VLAN über br-guest zwischen den beiden Hosts transportiert werden. Wir wählen die VLAN ID 1234.
+
+\section {Wheezy Upgrade für pc-virt2}
+
+Da Gruppe 2 aus dem Praktium ausgestiegen ist, können wir den Host für unsere Zwecke nutzen. Zuerst wird wie in Kapitel \ref{chap:whezzy_ugprade} der Host auf wheezy upgegraded.
+
+\setupVerbatimOut
+\begin{verbatim}
+#### Upgrade von pc-virt2 auf wheezy 
+# /etc/apt/sources.list tausche squeeze durch wheezy
+apt-get update
+apt-get dist-upgrade -y
+\end{verbatim}
+
+
+\section {Open vSwitch für pc-virt2}
+
+Anschließend muss auf pc-virt2 auch das Open vSwitch installiert werden. (Ähmlich wie in Kapitel~\ref{chap:ovs})
+
+\setupVerbatimOut
+\begin{verbatim}
+### Installiere OpenVSwitch auf pc-virt2
+apt-get instal openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
+modprobe openvswitch-mod
+
+# Lösche klassische Bridge
+
+# Erstelle beide Bridges
+ovs-vsctl add-br br-guest
+ovs-vsctl add-br br-vmonly
+ovs-vsctl add-port br-guest eth0
+
+# Setze  State UP
+ifconfig eth0 up
+ifconfig br-guest
+
+
+### /etc/network/interfaces bearbeiten
+## in br-guest
+# Entfernde "bridge_ports" aus
+# Füge "up ifconfig eth0 up" 
+## bei br-vmonline
+## neues abschnitt
+iface br-vmonly inet manual
+    up ifconfig $IFACE up
+    
+# Versuche Start von Guest1 auf pc-virt2
+# -> geht nicht da br-compat in /etc/default/openvswitch-switch nicht aktiviert
+\end{verbatim}
+
+\section{VLAN br-vmonly über Switch}
+
+Nun wird die Bridge br-vmonly so umgebaut, dass alle Pakete für sie über br-guest mit dem Tag 1234 laufen.
+
+\setupVerbatimOut
+\begin{verbatim}
+# Füge vm-only mit tag auf br-guest (auf beiden Rechnern)
+# Lösche br-vmonly temporär
+ovs-vsctl del-br br-vmonly
+
+# Füge br-vmonly mit VLAN tag 1234 auf br-guest
+ovs-vsctl add-br br-vmonly br-guest 1234
+
+# Aktiviere Brdige
+ifconfig br-vmonly up
+
+# Beide VMs runterfahren und neu starten (auf jeweils unterschiedlichen Hosts)
+xm shutdown guest[12]
+xm create /etc/xen/guest[12].cfg
+\end{verbatim}
+
+Nun stellt man fest, dass noch keine Kommunikation zwischen den beiden Host VMs über br-vmonly möglich ist. 
+\\
+$\Rightarrow$ Es muss das entsprechnde VLAN mit ID 1234 noch auf dem CISCO Switch eingerichtet werden.
+
+\setupVerbatimOut
+\begin{verbatim}
+# In Configure modus gehen
+switch4cd502# conf t
+# Vlan 1234 erstellen
+switch4cd502(config)# vlan database 
+switch4cd502(config-vlan)# vlan 1234
+switch4cd502(config-vlan)# exit
+# Für pc-virt[123] interface mit tagged VLAN 1234 einstellen 
+switch4cd502(config)# int gi9 
+switch4cd502(config-if)# switchport trunk allowed vlan add 1234
+switch4cd502(config-if)# exit
+switch4cd502(config)# int gi11
+switch4cd502(config-if)# switchport trunk allowed vlan add 1234
+switch4cd502(config-if)# exit
+switch4cd502(config)# int gi13
+switch4cd502(config-if)# switchport trunk allowed vlan add 1234
+switch4cd502(config-if)# exit
+switch4cd502(config)# exit
+# Speichern für nächsten Start des Switches
+switch4cd502# write memory
+\end{verbatim}
+
+Nun ist br-vmonly auch zwischen den beiden Hosts möglich.
+
+
+\chapter{DRBD Blockdevicesync}
+
+Mit AOE aus Kaptiel \ref{chap:aoe} kann zwar ein Blockdevice einem anderen Host übers Netzwerk zu Verfügung gestellt werden, jedoch muss man z.B. pc-virt1 warten kann die guest1 nicht auf pc-virt2 weiterausgeführt werden, da der Festplattenspeicher nicht zur Verfügung steht. Aus diesem Grund wird nun das Swap und Root - Blockdevice einer neuen VM guest3 mittels DRBD zwischen pc-virt1 und pc-virt2 gesharet. Somit könnte in oben beschriebenen Fall pc-virt1 neugestartet werden ohne das ein Ausfall von guest3 drohen würde.
+
+\section{DRBD installieren/konfiguieren}
+
+Dieses Sektion wird auf beiden Hosts (pc-virt1 und pc-virt2) durchgeführt:
+\setupVerbatimOut
+\begin{verbatim}
+# Installieren
+apt-get install drbd8-utils
+\end{verbatim}
+
+Anschließend wird in den globalen Optionen die Sync Gewschwindigkeit auf 100Mbit begrenzt:
+\\
+\verb|/etc/drbd.d/global_config.conf|
+\setupVerbatimOut
+\begin{verbatim}
+global { usage-count no; }
+common { syncer { rate 100M; } }
+\end{verbatim}
+
+Konfiguration für Root Device:\verb|/etc/drbd.d/guest1-root.res|
+\setupVerbatimOut
+\begin{verbatim}
+resource guest1-root {
+        protocol C;
+        net {
+                allow-two-primaries;
+                cram-hmac-alg sha1;
+                shared-secret "d9a8sdtgejho3";
+                after-sb-0pri discard-younger-primary; #discard-zero-changes;
+                after-sb-1pri discard-secondary;
+                after-sb-2pri call-pri-lost-after-sb;
+        }
+        on pcvirt01 {
+                device /dev/drbd1;
+                disk /dev/storage/drbd-guest1-root;
+                address 192.168.1.131:7789;
+                meta-disk internal;
+        }
+        on pcvirt02 {
+                device /dev/drbd1;
+                disk /dev/storage/drbd-guest1-root;
+                address 192.168.1.132:7789;
+                meta-disk internal;
+        }
+}
+\end{verbatim}
+
+Konfiguration für Swap Device: \verb|/etc/drbd.d/guest1-swap.res|
+\setupVerbatimOut
+\begin{verbatim}
+resource guest1-swap {
+        protocol C;
+        net {
+                allow-two-primaries;
+                cram-hmac-alg sha1;
+                shared-secret "d9a8sdtgej124";
+                after-sb-0pri discard-younger-primary; #discard-zero-changes;
+                after-sb-1pri discard-secondary;
+                after-sb-2pri call-pri-lost-after-sb;
+        }
+        on pcvirt01 {
+                device /dev/drbd2;
+                disk /dev/storage/drbd-guest1-swap;
+                address 192.168.1.131:7790;
+                meta-disk internal;
+        }
+        on pcvirt02 {
+                device /dev/drbd2;
+                disk /dev/storage/drbd-guest1-swap;
+                address 192.168.1.132:7790;
+                meta-disk internal;
+        }
+}
+\end{verbatim}
+
+
+\section{DRBD intialisieren}
+
+Nun wird DRBD initialisiert und das erste mal gesynct. Davor muss noch auf pc-virt2 eine LVM Volume Group eingerichtet werden:
+
+\setupVerbatimOut
+\begin{verbatim}
+# Erstelle Partition über ganze Platte auf /dev/sdb mit Type 8e00
+# pc-virt2 LVM einrichten
+vgcreate storage /dev/sdb1 
+\end{verbatim}
+
+Anschließend auf beiden Hosts die Backend-Devices für DRBD erstellen.
+
+\setupVerbatimOut
+\begin{verbatim}
+# LVs für DRBD einrichten
+lvcreate -L6G -n drbd-guest1-root storage
+lvcreate -L256M -n drbd-guest1-swap storage
+\end{verbatim}
+
+Starte DRBD und formatiere die Backend Devices (auf beiden Hosts)
+
+\setupVerbatimOut
+\begin{verbatim}
+# Starte drbd
+service drbdrstart
+
+# Erstelle Metadata auf für DRBD Devices (jeweils auf beiden Hosts)
+drbdadm create-md guest1-swap
+drbdadm create-md guest1-root
+\end{verbatim}
+
+
+Nun wird der intiale Sync von den beiden DRBD Devices /dev/drbd1 und /dev/drbd2 durchgeführt, (nur von einem pc-virtX aus).
+
+\setupVerbatimOut
+\begin{verbatim}
+# Starte intialen Sync von einem der beiden Hosts
+drbdadm -- --overwrite-data-of-peer primary all
+
+## Sync beobachten 
+# Nr. 1 synct noch, Forschritt bei 12,0\%
+# Nr. 2 bereits in sync sichtbar an UpToDate/UpToDate
+cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 41C52C8CD882E47FB5AF767 
+
+ 1: cs:SyncSource ro:Secondary/Secondary ds:UpToDate/Inconsistent C r-----
+    ns:747264 nr:0 dw:0 dr:755456 al:0 bm:44 lo:2 pe:158 ua:128 ap:0 ep:1 wo:f oos:5452576
+        [=>..................] sync'ed: 12.0\% (5324/6044)Mfinish: 0:00:59 speed: 92,144 (92,144) K/sec
+ 2: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+
+# Nr. 1 s+ Nr. 2 bereits in sync sichtbar an UpToDate/UpToDate
+# Sync fertig
+cat /proc/drbd 
+version: 8.3.11 (api:88/proto:86-96)
+srcversion: 41C52C8CD882E47FB5AF767 
+
+ 1: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:6189728 nr:0 dw:0 dr:6189728 al:0 bm:378 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+ 2: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+    ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+\end{verbatim}
+
+Zu guter letzt müssen auf beiden Hosts noch die Devices in den Primary State versetzt werden, nur im Primary Modus stehen die Devices zum lesen und schreiben zur Verfügung.
+
+\setupVerbatimOut
+\begin{verbatim}
+#  DRBD aktivieren (jeweils auf beiden Hosts)
+drbdadm primary all
+\end{verbatim}
+
+\section{Guest 3 installieren}
+Nun wird ein neuer Xen Guest auf den DRBD Devices installiert:
+\setupVerbatimOut
+\begin{verbatim}
+# Installieren des Gastes
+xen-create-image --ip 192.168.1.3 --bridge=br-guest  --swap-dev=/dev/drbd2 --password=123 --image-dev=/dev/drbd1 --hostname=guest3 --vcpus=2 --dist wheezy
+
+# Starte VM
+xm create /etc/xen/guest3.cfg
+
+# Konfig Netzwerk in der VM:
+cat /etc/network/interfaces
+# Configure /etc/network/interfaces
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+auto eth0
+iface eth0 inet static
+ address 192.168.1.3
+ gateway 192.168.1.131
+ netmask 255.255.255.0
+    
+# Reboot guest3
+\end{verbatim}
+
+\verb|guest3| kann frei zwischen pc-virt1 und pc-virt2 verschoben werden, dabei ist nur der Rechner nötig auf dem die VM läuft der andere kann in der Zeit offline gehen, neugestartet oder gewartet werden.
