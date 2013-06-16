@@ -282,7 +282,7 @@
   }%
   \newcommand{\setupVerbatimOut}{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{}%
+    \lstset{language=,frame=,basicstyle=, caption={[]}}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \newcommand{\setupVerbatimCaption}[3]{%
@@ -441,10 +441,10 @@
 
   % Titelseiten
   \ifTUM%
-    %\input{tu_titel}%
+    \input{tu_titel}%
   \fi%
   \ifLMU%
-    %\input{lmu_titel}%
+    \input{lmu_titel}%
   \fi%
   
   % Erklärung
