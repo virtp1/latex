@@ -20,13 +20,13 @@ Zusätzlich haben wir einen Symlink
 \begin{verbatim} 
 09_linux_xen -> 20_linux_xen 
 \end{verbatim} 
-in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen wird. Das Passwort für den Benutzer \verb#root# haben wir auf \verb#123# geändert.
+in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen wird. Das Passwort für den Benutzer \verb#root# wurde auf \verb#123# geändert.
 
 
 Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS Einträgen außerhalb der Praktikumsumgebung hatte.
 
 \chapter{Storage}
-Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen, siehe Abschnitt \ref{raid}. Dieser Verbund bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächliche Datenspeicher sollen mit LVM erzeugte Logical Volumes dienen. Dies beschreiben wir in Abschnitt \ref{lvm}. 
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem Logical Volume Manager (LVM) erzeugte Logical Volumes (LV) dienen. 
 \section{RAID}
 \label{raid}
 Für einen RAID-Verbund werden mindestens zwei Festplatten benötigt, welche möglichst identisch sein sollten. Wir verwenden die Platten \verb#sdb# und \verb#sdc# auf \verb#pcvirt01#. 
@@ -38,8 +38,8 @@ Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, je
 apt-get install gdisk
 gdisk /dev/sdb
 \end{verbatim}
-Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die erste für GPT mit ca. 1 Megabyte. Die zweite mit dem restlichen Platz der Festplatte. \\
-Die Partitionstabelle wurde mit \verb#sgdisk -R# auf die 2. Platte übertragen und danach die GUID wieder randomisiert (\verb#sgdisk -G#)
+Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die erste für GPT mit ca. 1 Megabyte. Die zweite mit dem restlichen Platz der Festplatte.
+Diese Partitionen wurden auf die 2. Platte übertragen (\verb#sgdisk -R#) und danach die GUID wieder randomisiert (\verb#sgdisk -G#)
 \setupVerbatim{bash}
 \begin{verbatim}
 sgdisk -R=/dev/sdc /dev/sdb
@@ -69,8 +69,6 @@ $ dmesg | tail
 [ 1223.952093] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
 [ 1223.952095] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
 [ 1223.952097] md: using 128k window, over a total of 488253248k.
-
-
 
 $ cat /proc/mdstat
 Personalities : [raid1] 
@@ -422,7 +420,8 @@ ln -s /dev/storage/guest1-swap /dev/etherd/e0.2
 Nötig wurde dieser Schritt, da beide Hosts mit der gleichen Konfiguration der VM arbeiten und daher jedes genutzte Blockdevice unter demselben Pfad auffindbar sein muss.
 
 \section{Konfiguration der Gast-VM }
-Der die Pfade der Datenspeicher von \verb#guest1# soll nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden. Hierzu werden in der Konfiguration von \verb#guest1# die Zeilen
+Die Pfade der Datenspeicher von \verb#guest1# müssen nun entsprechend den vorangegangenen Abschnitten angepasst werden, damit die VM auf beiden Hosts auf ihre Blockdevices zugreifen kann. Auf \verb#pcvirt02# wird dann AoE genutzt, auf \verb#pcvirt01# wird direkt auf das LV zugegriffen.
+Konkret werden zu diesem Zweck in der Konfiguration von \verb#guest1# die Zeilen
 \setupVerbatimOut
 \begin{verbatim}
 disk        = [
