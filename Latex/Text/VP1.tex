@@ -104,23 +104,24 @@ lvm> pvs
   PV         VG      Fmt  Attr PSize   PFree  
   /dev/md1   storage lvm2 a--  465.63g 436.13g
 \end{verbatim} 
-Bei Erstellen der VMs haben wir festgestellt, dass dabei neue Partitionen für die Gastbetriebsysteme angelegt werden (\verb#guestX-disk# und \verb#guestX-swap#). Somit ist es also nicht notwendig diese von Hand zu erstellen. 
+Bei Erstellen der VMs haben wir festgestellt, dass dabei neue Partitionen für die Gastbetriebssysteme angelegt werden (\verb#guestX-disk# und \verb#guestX-swap#). Somit ist es also nicht notwendig diese von Hand zu erstellen. 
 
 \chapter{Open vSwitch}
 \label{chap:ovs}
-Um später mit Open vSwitch experimentieren zu können, wurde dieser im System installiert und eingerichtet.
+Da wir die von Linux mitgelieferte Bridge-Implementierung durch Open vSwitch (OVS) ersetzen wollten, waren einige weitere Schritte notwendig. Die Vorteile, die Open vSwitch im Bereich VLAN Trunking bringt, welches im Kapitel \ref{vlan_trunk} eingesetzt werden soll, wiegen diese Zusatzarbeiten unserer damaligen Einschätzung nach auf. 
+\\
+Die Installation gestaltet sich auf dem Debian Wheezy System relativ einfach, da mit \verb#apt-get# die Pakete einfach geladen werden können:
 \setupVerbatim{bash}
 \begin{verbatim}
-apt-get instal openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
-modprobe openvswitch-mod
-\end{verbatim} 
-Die erfolgreiche Installation des Moduls kann man der Ausgabe von \verb#dmesg# entnehmen.
+apt-get install openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
+\end{verbatim}
+
+Ein anschließendes \verb#modprobe openvswitch-mod# lädt das Kernelmodul von Open vSwitch. Dessen erfolgreiche Installation kann man der Ausgabe von \verb#dmesg# entnehmen:
 \setupVerbatimOut
 \begin{verbatim}
 [ 2377.104677] openvswitch_mod: Open vSwitch switching datapath 1.4.2, built Apr 30 2013 15:47:50
 \end{verbatim}
-Das Paket \verb#openvswitch-brcompat# bietet eine Unterstützung für Programme, die bislang die Schnittstellen des \verb#bridge# Moduls nutzten, um mit Open vSwitch weiterhin zu funktionieren. 
-Um diese Unterstützung zu aktivieren wurde in der Datei \verb#/etc/default/openvswitch-switch# der Schalter \verb#BRCOMPAT=yes# gesetzt. Anschließend wurde der Open vSwitch Dienst gestartet und eine Bridge für die VMs erzeugt:
+Das Paket \verb#openvswitch-brcompat# bietet eine Unterstützung für Programme, die bislang die Schnittstellen des \verb#bridge# Moduls nutzten, um mit Open vSwitch weiterhin zu funktionieren. Damit diese Unterstützung aktiviert wird, musste in der Datei \verb#/etc/default/openvswitch-switch# der Schalter \verb#BRCOMPAT=yes# gesetzt werden. Anschließend wurde der OVS-Dienst gestartet und eine Bridge für die VMs erzeugt:
 \setupVerbatimBash
 \begin{verbatim}
 /etc/init.d/openvswitch-switch start
@@ -154,7 +155,7 @@ b01c6804-1ad5-4294-98d1-b6aa0a8f6155
     ovs_version: "1.4.2"
 \end{verbatim}
 
-Anschließend wurde die Konfiguration der Schnittstellen in \verb#/etc/network/interfaces# angepasst:
+Anschließend wurde die Konfiguration der Schnittstellen in \verb#/etc/network/interfaces# angepasst, damit anstatt dem einzelnen Interface \verb#eth0# beim Start des Systems die Bridge \verb#br-guest# konfiguriert wird:
 \setupVerbatimOut
 \begin{verbatim}
 auto lo eth1
@@ -176,7 +177,11 @@ iface br-guest inet static
     
 \end{verbatim}
 
-Die Konfiguration wurde neu geladen und die Konnektivität mittels \verb#ping# überprüft, was erfolgreich verlief.
+Die oben getätigten Einstellungen des \verb#ovs-vsctl# Kommandos werden ohne weiteres Zutun durch Open vSwitch persistiert.
+\\
+Anschließend wurde die Konfiguration, durch einen Neustart geladen. Die Konnektivität zu anderen Hosts im internen Praktikumsnetz wurde mittels \verb#ping# erfolgreich überprüft.
+\\
+Die grundlegenden Anforderungen an die Infrastruktur des Hostrechners sind damit erfüllt, so dass in dem nächsten Kapitel die erste VM erstellt werden kann.
 
 \chapter{VM}
 
@@ -551,7 +556,7 @@ Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten 
 
 
 \chapter{VLAN für br-vmonly zwischen zwei Hosts}
-
+\label{vlan_trunk}
 Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss das LAN in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen die VLAN ID 1234.
 
 \section {Vorarbeiten auf auf dem zweiten Hostsystem}\label{ovs2}
