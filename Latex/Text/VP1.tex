@@ -335,20 +335,21 @@ Durch die Konfiguration des Kernels zu \verb#hvmloader# und Nutzung des Builders
 disk = [ <WEITERE KONFIGURATION> , 'file:/xen/iso/debian-7.0.0-amd64-netinst.iso,hdc:cdrom,r']
 \end{verbatim}
 
-Abbildung \ref{megaplot} vergleicht die Netzperformanz verschiedener VMs:
+Abbildung \ref{megaplot} vergleicht die Netzperformanz verschiedener VMs gemessen mit \verb#iperf# auf der Hostmaschine:
 \begin{itemize}
 \item paravirtualisierte VM (PVM)
-\item vollvirtualisierte VM mit Netzschnittstellenemulation durch qemu (HVM)
+\item vollvirtualisierte VM mit Netzschnittstellenemulation durch \verb#QEMU# (HVM)
 \item vollvirtualisierte VM mit paravirtualisierten Netzschnittstellen Treibern (HVM\_PV)
 \end{itemize}
 
-Kurze Tests der TCP-Performanz zwischen der VM und dem Hostsystem mittels iperf zeigten eine unwesentlich geringere Netzperformanz einer vollvirtualisierten VM (HVM_PV) mit den vorherigen Paravirtualisierten (PVM). Dies ist nicht verwunderlich, da standardmässig im Kernel enthaltene Paravirtualisierungstreiber für Netzschnittstellen und Blockdevices genutzt werden, um hier eine hohe Performanz zu gewährleisten. 
-Abgeschaltet werden kann die Unterstützung mittels \verb#xen_platform_pci = 0# in der Konfiguration der VM . Tut man dies, so vermindert sich beispielsweise die mögliche TCP Datenrate auf ca. 1/3 der auf dem Host möglichen Übertragungsrate über physische Verbindungen, da die genutzte Emulation mittels qemu sehr langsam ist.
+Dieser Test zeigt wie in Abbildung \ref{megaplot} ersichtlich extreme Unterschiede bzgl. der Datenraten. Während die Messung mit HVM\_PV Treibern -- die standardmäßig aktiviert sind -- ebenso wie die PVM hohe Datenraten zeigen, bricht die Datenrate bei der \verb#QEMU#-Emulation extrem ein.
+
+Den Verzicht auf die HVM\_PV Treiber konfiguriert man mittels des Parameters \verb#xen_platform_pci = 0# in der Konfigurationsdatei der VM.
 
 \begin{figure}
 \input{plot1}
+\caption{Vergleich der Netz IO Performanz}
 \label{megaplot}
-\caption{Vergleich der Netz IO Performanz mittels \verb#iperf#}
 \end{figure}
 \chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
