@@ -508,7 +508,9 @@ xm create guest1.cfg
 xm migrate --live guest1 192.168.1.131
 \end{verbatim}
 
-Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100ms im Netz unerreichbar war. 
+Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100ms im Netz unerreichbar war. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit laufenden Services teilweise ebenfalls Ausfallzeiten geringer 100ms gemessen wurden. Ein Gratuitous
+ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert wird in Abschnitt \ref{Gratuitous} nachgewiesen.
+
 
 \section{Beobachtungen der Migration mit tshark} \label{mig_tcpdump}
 Um ein weiteres Verständnis der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
@@ -528,8 +530,10 @@ Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen d
 >[viele Daten mainly RAMcopy]
 <(ok)
 \end{verbatim}
+\label{xen_bullshit}
+Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} und vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für das Aktzeptieren der Migration oder eine Ablehnung an dieser Stelle vorzusehen, obwohl \cite{clark2005live} sowohl in den Stages Reservation und Stop-and-Copy vorsieht, dass Xen Migrationen in solchen Fällen abgebrochen werden können: ``Failure to secure resources here means that the VM simply continues to run on A unaffected.''\footnote{Fehler bei der Ressourcenreservierung zu diesem Zeitpunkt bedeuten, dass die VM einfach auf A unangetastet weiterläuft.}\cite{clark2005live} und ``The copy at A is still con-
+sidered to be primary and is resumed in case of failure.''\footnote{Die Kopie auf A wird weiterhin als das Primärsystem angesehen und im Fehlerfall dort wieder gestartet.}\cite{clark2005live}
 
-Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} und vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für das Aktzeptieren der Migration oder eine Ablehnung an dieser Stelle vorzusehen.
 
 \subsection{Fehlerhafte Migration von Xen 4.1 auf 4.0}
 Bei der fehlgeschlagenen Migration läuft die Kommunikation wie im vorherigen Abschnitt ab -- wobei \verb#pcvirt01# und \verb#pcvirt02# vertauscht sind. Anstatt \verb#(ok)# meldet \verb#pcvirt02# diese Fehlermeldung:
@@ -538,9 +542,10 @@ Bei der fehlgeschlagenen Migration läuft die Kommunikation wie im vorherigen Ab
 <(err (type "<class 'xen.xend.XendError.XendError'>") (value '/usr/lib/xen-4.0/bin/xc_restore 24 10 1 2 0 0 0 0 failed'))
 \end{verbatim}
 
-Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird, ist uns nicht ersichtlich. So findet nämlich leider eine Migration der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht. Hier bleibt zu hoffen, dass XAPI als zukünftiger Ersatz für Xend diese Fehler nicht macht.
+Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird, ist uns auch Aufgrund der Arbeit von \cite{clark2005live}, wo dies für Xen beschrieben wird (vgl. Abschnitt \ref{xen_bullshit}), nicht ersichtlich. 
+So findet nämlich leider eine Migration der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht. Hier bleibt zu hoffen, dass dieses Verhalten durch den inzwischen als obsolet eingestuften \verb#xend# verursacht wird und in den designierten Nachfolgern für das Management -- \verb#xl# und \verb#XAPI# -- diese Fehler nicht weiterhin bestehen. Eine weitere Überprüfung dieses Sachverhalts hätte den Rahmen des Praktikums gesprengt.
 
-\subsection{Gratuitous ARP der VM IP/Mac}
+\subsection{Gratuitous ARP der VM IP/Mac}\label{Gratuitous}
 
 Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten Switches/Bridges aktuell sind, Xen noch im Namen der VM einen sog. Gratuitous ARP Request vom Migrations-Ziel absenden dieser sieht so aus:
 
@@ -549,6 +554,7 @@ Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten 
 151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
 \end{verbatim}
 
+Nachden nun VMs zwischen den Hosts migriert werden können besteht nun das Problem, dass die Bridge \verb#br-vmonly# Auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird, so dass VMs die dieses Netz nutzen wollen, sich aktuell nicht erreichen können. Dieses Manko wird im Folgenden Abschnitt durch VLAN Trunking behoben.
 
 \chapter{VLAN für br-vmonly zwischen zwei Hosts}
 
