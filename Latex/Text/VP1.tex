@@ -411,7 +411,7 @@ ln -s /dev/storage/guest1-swap /dev/etherd/e0.2
 
 Nötig wurde dieser Schritt, da beide Hosts mit der gleichen Konfiguration der VM arbeiten und daher jedes genutzte Blockdevice unter demselben Pfad auffindbar sein muss.
 
-\section{Konfiguration von \verb#guest1#}
+\section{Konfiguration der Gast-VM }
 Der die Pfade der Datenspeicher von \verb#guest1# soll nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden. Hierzu werden in der Konfiguration von \verb#guest1# die Zeilen
 \setupVerbatimOut
 \begin{verbatim}
@@ -449,7 +449,11 @@ Um VMs migrieren zu können, muss auf den Hosts die Konfigurationsdatei \verb#/e
 \end{verbatim} 
 Nach einem Neustart von Xen mit \verb#/etc/init.d/xen restart# ist die Migration möglich. 
 
-\section{Live Migration der VM \verb#guest1# von \verb#pcvirt01# nach \verb#pcvirt02#}
+\section{Live Migration einer Gast-VM zwischen zwei Hostsystemen}
+Nun soll die VM \verb#guest01# von \verb#pcvirt01# zu \verb#pcvirt02# migriert werden.
+
+\todo{WRITE THIS BETTER}
+
 \subsection{1. Versuch $\Rightarrow$ Bridge fehlt}
 Starte VM auf \verb#pcvirt01# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#:
 \setupVerbatimOut
@@ -535,7 +539,7 @@ Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten 
 
 Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss das LAN in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen die VLAN ID 1234.
 
-\section {Vorarbeiten auf pcvirt02}\label{ovs2}
+\section {Vorarbeiten auf auf dem zweiten Hostsystem}\label{ovs2}
 Da Gruppe 2 aus dem Praktium ausgestiegen ist, können wir den Host für unsere Zwecke nutzen. Zuerst wird wie in Kapitel \ref{chap:whezzy_ugprade} der Host auf wheezy upgegraded.
 Anschließend muss auf pcvirt02 auch das Open vSwitch installiert werden (vgl. Kapitel~\ref{chap:ovs}), die klassiche Bridge entfernt werden und die genutzten Bridges neu erstellt werden:
 \setupVerbatim{bash}
@@ -753,7 +757,7 @@ Zu guter Letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary St
 drbdadm primary all
 \end{verbatim}
 
-\section{\verb#guest3# installieren}
+\section{Installation einer VM auf DRBD Devices}
 Nun wird ein neuer Xen-Gastsystem \verb#guest3# auf den DRBD Devices installiert und gestartet:
 \setupVerbatimOut
 \begin{verbatim}
