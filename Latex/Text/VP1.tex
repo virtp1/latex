@@ -1,16 +1,17 @@
 \chapter{Einleitung}
-Unser Praktikum unterteilt sich neben der Erstellung von virtuellen Maschinen (VMs) auf fünf größere Aufgaben (kapitel? bereiche?) . \\
-Die lokale Infrastruktur auf unserem Rechner ergänzen wir mit einem LVM, aufbauend auf einem RAID1 zur Speicherverwaltung und Open vSwitch als Ersatz der standardmäßigen Bridge. \\
+Notwendige Anpassungen des Hosts, damit wir VMs erstellen können...
+Unser Praktikum unterteilt sich neben der Erstellung von virtuellen Maschinen (VMs) auf fünf größere Aufgaben (kapitel? bereiche?)... \\
+Die lokale Infrastruktur auf unserem Rechner ergänzen wir mit einem \emph{Logical Volume Manager}(LVM), aufbauend auf einem \emph{Redundant Array of Independent Disks}(RAID) zur Speicherverwaltung und Open vSwitch als Ersatz der standardmäßigen Bridge. \\
 Erstellt haben wir insgesamt vier VMs mit unterschiedlichen Parametern und Einstellungen. Dabei testen wir verschiedene Netzschnittstellentypen und verschiedene Virtualisierungsmethoden. \\
-Für die Live-Migration der VMs testen wir Blockdevices, die über verschiedene Möglichkeiten in der Praktikumsumgebung zwischen den Hosts freigebenen sind. Dazu verwenden wir \emph{ATA-Over-Ethernet} (AOE) und \emph{Distributed Replicated Block Device} (DRBD). 
-
+Für die Live-Migration der VMs testen wir Blockdevices, die über verschiedene Möglichkeiten in der Praktikumsumgebung zwischen den Hosts freigebenen sind. Dazu verwenden wir \emph{ATA-Over-Ethernet} (AOE) und \emph{Distributed Replicated Block Device} (DRBD), bei dem die Daten redundant auf mehreren Hosts gespeichert werden. 
 \chapter{Vorarbeit}
 \label{chap:whezzy_ugprade}
-Bevor mit dem eigentlichen Praktikum begonnen wurde, haben wir einige Vorarbeiten erledigt. Da wir vorhatten aktuellere Versionen von XEN einzusetzen, haben wir mit einem Distributionsupgrade des Praktikumssystems von Debian Squeeze auf Wheezy begonnen. 
+Bevor mit dem eigentlichen Praktikum begonnen wurde, haben wir einige Vorarbeiten erledigt: \\ 
+Um aktuellere Versionen von Xen einsetzen zu können, haben wir mit einem Distributionsupgrade des Praktikumssystems von Debian Squeeze auf Wheezy begonnen. \\ 
+Dazu wird in \verb#/etc/apt/sources.list# jedes Vorkommen von \textquotedblleft\verb#squeeze#\textquotedblright ~ durch \textquotedblleft\verb#wheezy#\textquotedblright ~ ersetzt und folgende Befehle ausgeführt: 
 
 \setupVerbatim{bash}
 \begin{verbatim}
-# in /etc/apt/sources.list ersetze squeeze durch wheezy
 apt-get update
 apt-get dist-upgrade -y
 \end{verbatim}
@@ -19,24 +20,26 @@ Zusätzlich haben wir einen Symlink
 \begin{verbatim} 
 09_linux_xen -> 20_linux_xen 
 \end{verbatim} 
-in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen wird. Das Passwort für den Benutzer \verb#root# wurde auf \verb#123# geändert.
+in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen wird. Das Passwort für den Benutzer \verb#root# haben wir auf \verb#123# geändert.
 
 
 Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS Einträgen außerhalb der Praktikumsumgebung hatte.
 
 \chapter{Storage}
-Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit LVM erzeugte Logical Volumes dienen. 
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen, siehe Abschnitt \ref{raid}. Dieser Verbund bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächliche Datenspeicher sollen mit LVM erzeugte Logical Volumes dienen. Dies beschreiben wir in Abschnitt \ref{lvm}. 
 \section{RAID}
-Für den RAID Verbund wurden die Platten \verb#sdb# und \verb#sdc# verwendet.
+\label{raid}
+Für einen RAID-Verbund werden mindestens zwei Festplatten benötigt, welche möglichst identisch sein sollten. Wir verwenden die Platten \verb#sdb# und \verb#sdc# auf \verb#pcvirt01#. 
 
-Zum Erzeugen einer \emph{GUID Partition Table} (GPT) Partitionstabellen nutzten wir \verb#gdisk#, welches vorher installiert werden musste, da dies den designierten Nachfolgestandard für MBR-Partitionstabellen darstellt. Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich.
+Zum Erzeugen einer \emph{GUID Partition Table} (GPT) nutzten wir \verb#gdisk#, welches vorher installiert werden musste. \\ 
+Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, jedoch stellt GPT den designierten Nachfolgestandard für MBR-Partitionstabellen dar. 
 \setupVerbatim{bash}
 \begin{verbatim}
 apt-get install gdisk
 gdisk /dev/sdb
 \end{verbatim}
-Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die erste für GPT mit ca. 1 Megabyte. Die zweite mit dem restlichen Platz der Festplatte.
-Diese Partitionen wurden auf die 2. Platte übertragen (\verb#sgdisk -R#) und danach die GUID wieder randomisiert (\verb#sgdisk -G#)
+Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die erste für GPT mit ca. 1 Megabyte. Die zweite mit dem restlichen Platz der Festplatte. \\
+Die Partitionstabelle wurde mit \verb#sgdisk -R# auf die 2. Platte übertragen und danach die GUID wieder randomisiert (\verb#sgdisk -G#)
 \setupVerbatim{bash}
 \begin{verbatim}
 sgdisk -R=/dev/sdc /dev/sdb
@@ -47,7 +50,7 @@ Abschließend wurde der RAID-Verbund über die beiden Partitionen \verb#/dev/sdb
 \begin{verbatim}
 mdadm --create /dev/md1 -n 2 -l 1 /dev/sdb2 /dev/sdc2
 \end{verbatim}
-Zur Überprüfung, ob die Erstellung des Verbundes erfolgreich war, wurden nacheinander die Ausgabe von \verb#dmesg# sowie \verb#mdstat# betrachtet:
+Die Erstellung des RAID-Verbundes ist anhand der Ausgabe von \verb#dmesg# nachvollziehbar. Zur Überprüfung, ob die Erstellung erfolgreich war, ist der Inhalt von \verb#/proc/mdstat# hilfreich: 
 \setupVerbatimOut
 \begin{verbatim}
 $ dmesg | tail
@@ -80,7 +83,8 @@ unused devices: <none>
 Aus der Zeile \verb#md1 : active raid1 sdc2[1] sdb2[0]# lässt sich schließen, dass das RAID-Device verfügbar ist. \verb#[UU]# zeigt an, dass beide gespiegelten Partitionen aktuell (Up) sind \cite{wiki_mdstat}.
 
 \section{LVM}
-Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte, mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
+\label{lvm}
+Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte aus Abschnitt \ref{raid}, mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. \\ 
 Dann haben wir mit \verb#lvcreate# zwei logische Volumes in dieser Gruppe erstellt. Dabei gibt der Parameter \verb#-n# den Namen des logischen Volumes an, \verb#-L# die Größe. 
 \setupVerbatim{bash}
 \begin{verbatim}
