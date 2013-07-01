@@ -1,6 +1,6 @@
 \chapter{Vorarbeit}
 \label{chap:whezzy_ugprade}
-Bevor mit dem eigentlichen Praktikum begonnen wurde haben wir einige Vorarbeiten erledigt. Da wir vor hatten aktuellere Versionen von XEN einzusetzen haben wir mit einem Distributionsupgrade des Praktikumssystems von Debian Squeeze auf Wheezy begonnen. 
+Bevor mit dem eigentlichen Praktikum begonnen wurde, haben wir einige Vorarbeiten erledigt. Da wir vorhatten aktuellere Versionen von XEN einzusetzen, haben wir mit einem Distributionsupgrade des Praktikumssystems von Debian Squeeze auf Wheezy begonnen. 
 
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -16,10 +16,10 @@ Zusätzlich haben wir einen Symlink
 in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen wird. Das Passwort für den Benutzer \verb#root# wurde auf \verb#123# geändert.
 
 
-Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert da dieser Probleme beim Auflösen von DNS Einträgen ausserhalb der Praktikumsumgebung hatte.
+Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS Einträgen außerhalb der Praktikumsumgebung hatte.
 
 \chapter{Storage}
-Um einen Datenspeicher für spätere Virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit LVM erzeugte Logical Volumes dienen. 
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit LVM erzeugte Logical Volumes dienen. 
 \section{RAID}
 Für den RAID Verbund wurden die Platten \verb#sdb# und \verb#sdc# verwendet.
 
@@ -29,8 +29,8 @@ Zum Erzeugen der GPT Partitionstabellen nutzten wir \verb#gdisk#, welches vorher
 apt-get install gdisk
 gdisk /dev/sdb
 \end{verbatim}
-Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die Erste für GPT mit ca. 1 Megabyte. Die Zweite mit dem Restlichen Platz der Festplatte.
-Diese Partitionen wurden auf die 2. Platte übertragen (\verb#sgdisk -R#) und danach die GUID wieder randomisert (\verb#sgdisk -G#)
+Auf \verb#/dev/sdb# wurden schließlich zwei Partitionen erzeugt. Die erste für GPT mit ca. 1 Megabyte. Die zweite mit dem restlichen Platz der Festplatte.
+Diese Partitionen wurden auf die 2. Platte übertragen (\verb#sgdisk -R#) und danach die GUID wieder randomisiert (\verb#sgdisk -G#)
 \setupVerbatim{bash}
 \begin{verbatim}
 sgdisk -R=/dev/sdc /dev/sdb
@@ -41,7 +41,7 @@ Abschließend wurde der RAID-Verbund über die beiden Partitionen \verb#/dev/sdb
 \begin{verbatim}
 mdadm --create /dev/md1 -n 2 -l 1 /dev/sdb2 /dev/sdc2
 \end{verbatim}
-Zur Überprüfung ob die Erstellung des Verbundes erfolgreich war, wurde die Ausgabe von \verb#dmesg# betrachtet:
+Zur Überprüfung, ob die Erstellung des Verbundes erfolgreich war, wurde die Ausgabe von \verb#dmesg# betrachtet:
 \setupVerbatimOut
 \begin{verbatim}
 [  253.106706] sdb: sdb1 sdb2
@@ -62,7 +62,7 @@ Zur Überprüfung ob die Erstellung des Verbundes erfolgreich war, wurde die Aus
 \end{verbatim}
 
 \section{LVM}
-Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
+Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte, mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
 Dann haben wir mit \verb#lvcreate# zwei logische Volumes in dieser Gruppe erstellt. Dabei gibt der Parameter \verb#-n# den Namen des logischen Volumes an, \verb#-L# die Größe. 
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -71,7 +71,7 @@ vgcreate storage /dev/md1
 lvcreate -n guest1 -L 10G storage
 lvcreate -n guest2 -L 20G storage
 \end{verbatim} 
-Mit \verb#lvm# kann der Status der Konfiguration überprüft werden. \verb#lvs# zeigt die logischen Volumes, \verb#pvs# die physischen. 
+Mit \verb#lvm# kann der Status der Konfiguration überprüft werden. Dabei zeigt \verb#lvs# die logischen Volumes und \verb#pvs# die physischen. 
 \setupVerbatimOut
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -115,12 +115,12 @@ b01c6804-1ad5-4294-98d1-b6aa0a8f6155
                 type: internal
     ovs_version: "1.4.2"
 \end{verbatim} 
-Um eine Verbindung der Bridge in die Physische Welt zu schaffen musste eine physische Schnittstelle zur Bridge hinzugefügt werden.
+Um eine Verbindung der Bridge in die physische Welt zu schaffen, musste eine physische Schnittstelle zur Bridge hinzugefügt werden.
 \setupVerbatimBash
 \begin{verbatim}
 ovs-vsctl add-port br-guest eth0
 \end{verbatim}
-Das Ergbniss wurde abermals mit \verb#ovs-vsctl show# überprüft:
+Das Ergebnis wurde abermals mit \verb#ovs-vsctl show# überprüft:
 \setupVerbatimOut
 \begin{verbatim}
 b01c6804-1ad5-4294-98d1-b6aa0a8f6155
@@ -133,7 +133,7 @@ b01c6804-1ad5-4294-98d1-b6aa0a8f6155
     ovs_version: "1.4.2"
 \end{verbatim}
 
-Anschließend wurde die Konfiguration der Schnittstellen in \verb#\etc\network\interfaces# angepasst:
+Anschließend wurde die Konfiguration der Schnittstellen in \verb#/etc/network/interfaces# angepasst:
 \setupVerbatimOut
 \begin{verbatim}
 auto lo eth1
@@ -144,7 +144,7 @@ iface lo inet loopback
 # The primary network interface
 iface eth1 inet static
     address 10.163.235.131
-	netmask 255.255.255.128
+    netmask 255.255.255.128
 	gateway 10.163.235.254
 
 auto br-guest
@@ -246,7 +246,7 @@ xm create /etc/xen/guest1.cfg
 
 Auf dem Host wurde hierdurch eine Schnittstelle \verb#vif1.0# erstellt und mit der Bridge \verb#br-guest# verbunden. Nach Wechsel in die Konsole der VM mittels \verb#xm# \verb#console# \verb#guest1# wurde die Konnektivität mittels \verb#ping# auf der VM erfolgreich überprüft. Zum Verlassen der Konsole dient \verb#Ctrl+AltGr+9#.
 
-\section{2. VM sowie Zusätzliche Bridge für VM-Interconnect}
+\section{2. VM sowie zusätzliche Bridge für VM-Interconnect}
 Der nächste Versuch erweiterte den aktuellen Aufbau mit einer VM um eine weitere und fügte dem Aufbau eine weitere Bridge hinzu, die nur zwischen den VMs besteht und nicht auf ein physisches Interface abgebildet wird.
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -282,7 +282,7 @@ TCP window size: 23.5 KByte (default)
 [ ID] Interval       Transfer     Bandwidth
 [  3]  0.0-10.0 sec  10.6 GBytes  9.12 Gbits/sec
 \end{verbatim}
-Ein nebenbei laufender \verb#tcpdump# zeigte sehr große eingehende Ethernet Frames mit Größen bis zu 65226 Byte, während Ping Pakete, welche die MTU der \verb#vif# Schnittstellen oder Bridges überschritten fragmentiert -- oder bei gesetztem \verb#DF#-Flag abgewiesen -- wurden. Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Hierbei übernimmt die Schnttstelle die Segmentierung der TCP Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schntittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben.
+Ein nebenbei laufender \verb#tcpdump# zeigte sehr große eingehende Ethernet Frames mit Größen bis zu 65226 Byte, während Ping Pakete, welche die MTU der \verb#vif# Schnittstellen oder Bridges überschritten fragmentiert -- oder bei gesetztem \verb#DF#-Flag abgewiesen -- wurden. Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Hierbei übernimmt die Schnittstelle die Segmentierung der TCP Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schnittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben.
 \setupVerbatimOut
 \begin{verbatim}
 17:45:48.414535 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25535, offset 0, flags [DF], proto TCP (6), length 65212)
@@ -303,7 +303,7 @@ Zusätzlich wurde getestet, ob die Bridges und \verb#vif#-Schnittstellen mit Jum
 \section{HVM}
 Neben der Paravirtualisierung unterstützt XEN noch Vollvirtualiserung. Hierzu wird von XEN mit Hilfe der Virtualisierungsunterstützung der CPU ein Hypervisor installiert, der die Traps abfängt und die entsprechenden Hypercalls am eigentlichen XEN-Hypervisor aufruft.
 
-Um eine Vollvirtualisierte VM zu erstellen, muss die Konfiguration der VM angepasst werden (gekürzte Darstellung):
+Um eine vollvirtualisierte VM zu erstellen, muss die Konfiguration der VM angepasst werden (gekürzte Darstellung):
 \setupVerbatimOut
 \begin{verbatim}
 kernel      = '/usr/lib/xen-4.1/boot/hvmloader'
@@ -326,7 +326,7 @@ disk = [ <WEITERE KONFIGURATION> , 'file:/xen/iso/debian-7.0.0-amd64-netinst.iso
 Schnelle Performancetests mittels iperf zeigten die selbe Netzperformanz einer Vollvirtualisierten VM mit den vorherigen Paravirtualisierten. Dies ist nicht verwunderlich, da standardmässig im Kernel enthaltene Paravirtualisierungstreiber für Netzschnittstellen und Blockdevices genutzt werden, um hier eine hohe Performanz zu gewährleisten. 
 Abgeschaltet werden kann die Unterstützung mittels \verb#xen_platform_pci = 0# in der Konfiguration der VM. Tut man dies, so vermindert sich beispielsweise die mögliche TCP Datenrate auf ca. 1/3 der auf dem Host möglichen Übertragungsrate über physische Verbindungen, da die genutzte Emulation mittels qemu sehr langsam ist.
 
-\chapter{Ata-Over-Ethernet}
+\chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
 \section{Einrichtung Kernel Modul aoe auf pcvirt01 + pcvirt02}
 Vor der Einrichtung von AoE auf den Hosts pcvirt01 und pcvirt02 haben wir in den Konfigurationen der Kernels nachgesehen, ob AoE unterstützt wird. 
@@ -335,7 +335,7 @@ Vor der Einrichtung von AoE auf den Hosts pcvirt01 und pcvirt02 haben wir in den
 grep ATA_OVER /boot/config-`uname -r`
     CONFIG_ATA_OVER_ETH=m
 \end{verbatim} 
-Die Ausgame zeigt die Unterstützung von AoE als Kernel Modul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts geladen und  in \verb#/etc/modules# eingefüt, damit es beim Start automatisch geladen wird. 
+Die Ausgame zeigt die Unterstützung von AoE als Kernel Modul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts geladen und  in \verb#/etc/modules# eingefügt, damit es beim Start automatisch geladen wird. 
 
 \setupVerbatim{bash}
 \begin{verbatim} 
@@ -353,7 +353,7 @@ vbladed 0 2 br-guest /dev/storage/guest1-swap
 \end{verbatim}
 Damit die Devices auch nach einem Neustart wieder freigegeben werden, kommen die zwei letzten Befehle auch in \verb#/etc/rc.local#. 
 \section{Grundlegende Einrichtung des Initiators von pcvirt02}
-Da \verb#pcvirt02# noch nicht konfiguriert ist, wird dieser analog zu \verb#pcvirt01# soweit wie nötig eingerichtet wobei auf einen Open vSwitch verzichtet wurde.
+Da \verb#pcvirt02# noch nicht konfiguriert ist, wird dieser analog zu \verb#pcvirt01# soweit wie nötig eingerichtet, wobei auf einen Open vSwitch verzichtet wurde.
 \setupVerbatim{bash}
 \begin{verbatim}
 brctl addbr br-guest
@@ -380,7 +380,7 @@ aoe-stat
 \end{verbatim}
 
 \section{Konfiguration auf dem Target}
-Da AoE keine Targets auf dem lokalen Host finden kann haben wir die Targets auf \verb#pcvirt01# durch symlinks an die richtige Position im Filesystem gelinkt.
+Da die von uns genutzte AoE-Implementierung keine Targets, die auf dem selben Host bereitstellt werden, findet, haben wir die Targets auf \verb#pcvirt01# durch Symlinks an die richtige Position im Dateisystem gelinkt.
 \setupVerbatimOut
 \begin{verbatim}
 ln -s /dev/storage/guest1-disk /dev/etherd/e0.1
@@ -388,7 +388,7 @@ ln -s /dev/storage/guest1-swap /dev/etherd/e0.2
 \end{verbatim}
 
 \section{Konfiguration von guest1}
-guest1 soll Nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden:
+guest1 soll nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden:
 \setupVerbatimOut
 \begin{verbatim}
 # Verändere Guest Konfig auf pc-virt01
@@ -425,7 +425,7 @@ xm migrate --live guest1 192.168.1.132
 
 Die Migration schlägt fehl, der Maschinenstatus ist verloren. Ursache: Fehlende Brige br-vmonly auf pcvirt02
 \\
-$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft und die Migartion abgebrochen ohne dass der VM State verloren geht? 
+$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft und die Migration abgebrochen ohne dass der VM State verloren geht? 
 
 \subsection {2. Versuch $\Rightarrow$ Kernel fehlt}
 Starte VM auf \verb#pcvirt01#, erzeuge die fehlende Bridge auf \verb#pcvirt02# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#:
@@ -456,12 +456,12 @@ xm migrate --live guest1 192.168.1.131
 Migration erfolgreich, Networkdowntime $<$ als 100ms, da \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| keinen Loss anzeigte
 
 \section{Beobachtungen der Migration mit tshark}
-Um ein weiteres Verständniss der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
+Um ein weiteres Verständnis der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
 
 \subsection{Erfolgreiche Migration von Xen 4.0 auf 4.1}
-Es wird eine TCP Verbindung zwischen beiden Hosts aufgebaut und ein sehr einfaches Protokoll darüber genutzt. Dabei meldet sich \verb#pcvirt02# mit dem \verb|(receive)| command bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# an den \verb#pcvirt1# den \emph{LinuxGuestRecord} mit sämtlichen Settings und States der VM. Darauf schickt \verb#pcvirt02# die RAM Inhalte von \verb#guest1# an \verb#pcvirt01#. Den erfolgreichen Empfang quitiert \verb#pcvirt02# mit einem \verb|(ok)|.
+Es wird eine TCP Verbindung zwischen beiden Hosts aufgebaut und ein sehr einfaches Protokoll darüber genutzt. Dabei meldet sich \verb#pcvirt02# mit dem \verb|(receive)| command bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# an den \verb#pcvirt1# den \emph{LinuxGuestRecord} mit sämtlichen Settings und States der VM. Darauf schickt \verb#pcvirt02# die RAM Inhalte von \verb#guest1# an \verb#pcvirt01#. Den erfolgreichen Empfang quittiert \verb#pcvirt02# mit einem \verb|(ok)|.
 
-Im Folgenden sieht man einen Ausschnitts des Inhalts der Kommunikation zwischen den Hosts:
+Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen den Hosts:
 \setupVerbatimOut
 \begin{verbatim}
 # Von >=pcvirt02 nach <=pcvirt01
@@ -474,7 +474,7 @@ Im Folgenden sieht man einen Ausschnitts des Inhalts der Kommunikation zwischen 
 <(ok)
 \end{verbatim}
 
-Es ist zu Beobachten, dass nach der Übertragung des \emph{GuestRecords} vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den Empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für das Aktzeptieren der Migration oder eine Ablehnung an dieser Stelle vorzusehen.
+Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für das aktzeptieren der Migration oder eine Ablehnung an dieser Stelle vorzusehen.
 
 \subsection{Fehlerhafte Migration von Xen 4.1 auf 4.0}
 
@@ -484,11 +484,11 @@ Es läuft wieder wie im vorherigen Abschnitt ab. Nur dass \verb#pcvirt01# und \v
 <(err (type "<class 'xen.xend.XendError.XendError'>") (value '/usr/lib/xen-4.0/bin/xc_restore 24 10 1 2 0 0 0 0 failed'))
 \end{verbatim}
 
-Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den Sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird ist uns nicht ersichtlich. So findet nämlich leider eine Migration der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht. Hier bleibt zu hoffen, dass XAPI als zukünftiger Ersatz für Xen diese Fehler nicht macht.
+Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den Sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird ist uns nicht ersichtlich. So findet nämlich leider eine Migration der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht. Hier bleibt zu hoffen, dass XAPI als zukünftiger Ersatz für Xend diese Fehler nicht macht.
 
 \subsection{Gratuitous ARP der VM IP/Mac}
 
-Nach einer Erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten Switches/Bridges aktuell sind, Xen noch im Namen der VM einen sog. Gratuitous ARP Request vom Migrations-Ziel absenden dieser sieht so aus:
+Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten Switches/Bridges aktuell sind, Xen noch im Namen der VM einen sog. Gratuitous ARP Request vom Migrations-Ziel absenden dieser sieht so aus:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -500,9 +500,9 @@ Nach einer Erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten 
 
 Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide der selben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss das LAN in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen die VLAN ID 1234.
 
-\section {Vorrbeiten auf pcvirt02}
+\section {Vorarbeiten auf pcvirt02}
 Da Gruppe 2 aus dem Praktium ausgestiegen ist, können wir den Host für unsere Zwecke nutzen. Zuerst wird wie in Kapitel \ref{chap:whezzy_ugprade} der Host auf wheezy upgegraded.
-Anschließend muss auf pcvirt02 auch das Open vSwitch installiert werden (Ähmlich wie in Kapitel~\ref{chap:ovs}), die Klassiche Bridge entfernt werden und die genutzten Bridges neu erstellt werden:
+Anschließend muss auf pcvirt02 auch das Open vSwitch installiert werden (vgl. Kapitel~\ref{chap:ovs}), die klassiche Bridge entfernt werden und die genutzten Bridges neu erstellt werden:
 \setupVerbatim{bash}
 \begin{verbatim}
 apt-get instal openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
@@ -515,7 +515,7 @@ ifconfig eth0 up
 ifconfig br-guest
 \end{verbatim}
 
-\verb#/etc/network/interfaces# mwurde ebenfalls angepasst
+\verb#/etc/network/interfaces# wurde ebenfalls angepasst:
 \setupVerbatimOut
 \begin{verbatim}
 auto lo eth1
@@ -547,7 +547,7 @@ ifconfig br-vmonly up
 \end{verbatim}
 Beide VMs wurden nun auf unterschiedlichen Hosts gestartet, allerdings war noch keine Kon\-nek\-tiv\-ität über \verb#br-vmonly# vorhanden.
 \\
-$\Rightarrow$ Es muss das entsprechnde VLAN mit ID 1234 noch auf dem CISCO Switch eingerichtet werden.
+$\Rightarrow$ Es muss das entsprechende VLAN mit ID 1234 noch auf dem CISCO Switch eingerichtet werden.
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -572,15 +572,16 @@ switch4cd502(config)# exit
 switch4cd502# write memory
 \end{verbatim}
 
-Nun ist eine Konnektivität üner \verb#br-vmonly# auch Hostübergreifend möglich.
+Nun ist eine Konnektivität über \verb#br-vmonly# auch Hostübergreifend möglich.
 
 \chapter{DRBD Blockdevicesync}
 
-Mit AoE aus Kaptiel \ref{chap:aoe} kann zwar ein Blockdevice einem anderen Host übers Netz zu Verfügung gestellt werden, wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Aus diesem Grund wird nun das Swap und Root - Blockdevice einer neuen VM \verb#guest3# mittels \emph{DRBD} zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Somit könnte in oben beschriebenen Fall \verb#pcvirt01# neugestartet werden, ohne das ein Ausfall von \verb#guest3# drohen würde.
+Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host übers Netz zu Verfügung gestellt werden, wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Aus diesem Grund wird nun das Swap und Root - Blockdevice einer neuen VM \verb#guest3# mittels \emph{Distributed Replicated Block Device} (DRBD) zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Somit könnte in oben beschriebenen Fall \verb#pcvirt01# neugestartet werden, ohne dass ein Ausfall von \verb#guest3# drohen würde.
 
 \section{DRBD Installieren/Konfiguieren}
-
-Dieses Sektion wird auf beiden Hosts (\verb#pcvirt01# und \verb#pcvirt02#) durchgeführt: Installation von \emph{DRBD} mit 
+Die Konfiguration in diesem Abschnitt wird auf beiden Hosts (\verb#pcvirt01# und \verb#pcvirt02#) durchgeführt: 
+\\
+Installation von \emph{DRBD} mittels: 
 \setupVerbatimOut
 \begin{verbatim}
 apt-get install drbd8-utils
@@ -698,7 +699,7 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 Hier sieht man dass Nr. 1 noch synchronisiert wird und der  Forschritt bei 12,0\% liegt und  Nr. 2 bereits vollständig synchronisert wurde, was man an \verb#UpToDate/UpToDate# sieht.
-Wenig später betrachtet ist die Ausgabe wie folgt und die synchronisation daher abgeschlossen:
+Wenig später betrachtet ist die Ausgabe wie folgt und die Synchronisation daher abgeschlossen:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -711,7 +712,7 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 
-Zu guter letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary State} versetzt werden, nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung:
+Zu guter Letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary State} versetzt werden, nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung:
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm primary all
@@ -726,4 +727,3 @@ xm create /etc/xen/guest3.cfg
 \end{verbatim}
 
 \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# verschoben werden, dabei ist nur der Rechner nötig auf dem die VM läuft der andere kann in der Zeit offline gehen, neugestartet oder gewartet werden.
-
