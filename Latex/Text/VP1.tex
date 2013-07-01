@@ -554,7 +554,7 @@ Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten 
 151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
 \end{verbatim}
 
-Nachden nun VMs zwischen den Hosts migriert werden können besteht nun das Problem, dass die Bridge \verb#br-vmonly# Auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird, so dass VMs die dieses Netz nutzen wollen, sich aktuell nicht erreichen können. Dieses Manko wird im Folgenden Abschnitt durch VLAN Trunking behoben.
+Nachden nun VMs zwischen den Hosts migriert werden können besteht nun das Problem, dass die Bridge \verb#br-vmonly# auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird, so dass VMs die dieses Netz nutzen wollen, sich aktuell nicht erreichen können. Dieses Manko wird im Folgenden Abschnitt durch VLAN Trunking behoben.
 
 \chapter{VLAN für br-vmonly zwischen zwei Hosts}
 
