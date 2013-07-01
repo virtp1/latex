@@ -19,7 +19,7 @@ in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen
 Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS Einträgen außerhalb der Praktikumsumgebung hatte.
 
 \chapter{Storage}
-Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit LVM erzeugte Logical Volumes dienen. 
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen RAID1-Verbund über zwei Festplatten zu erzeugen. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem Logical Volume Manager (LVM) erzeugte Logical Volumes (LV) dienen. 
 \section{RAID}
 Für den RAID Verbund wurden die Platten \verb#sdb# und \verb#sdc# verwendet.
 
@@ -61,8 +61,6 @@ $ dmesg | tail
 [ 1223.952095] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
 [ 1223.952097] md: using 128k window, over a total of 488253248k.
 
-
-
 $ cat /proc/mdstat
 Personalities : [raid1] 
 md1 : active raid1 sdc2[1] sdb2[0]
@@ -74,8 +72,8 @@ unused devices: <none>
 Aus der Zeile \verb#md1 : active raid1 sdc2[1] sdb2[0]# lässt sich schließen, dass das RAID-Device verfügbar ist. \verb#[UU]# zeigt an, dass beide gespiegelten Partitionen aktuell (Up) sind \cite{wiki_mdstat}.
 
 \section{LVM}
-Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte, mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
-Dann haben wir mit \verb#lvcreate# zwei logische Volumes in dieser Gruppe erstellt. Dabei gibt der Parameter \verb#-n# den Namen des logischen Volumes an, \verb#-L# die Größe. 
+Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde der soeben generierte RAID1-Verbund \verb#/dev/md1#  mit \verb#pvcreate# als Physical Volume (PV) initialisiert und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
+Dann haben wir mit \verb#lvcreate# zwei LVs in dieser Gruppe erstellt. Dabei gibt der Parameter \verb#-n# den Namen des LV an, \verb#-L# die Größe. 
 \setupVerbatim{bash}
 \begin{verbatim}
 pvcreate /dev/md1 
@@ -83,7 +81,7 @@ vgcreate storage /dev/md1
 lvcreate -n guest1 -L 10G storage
 lvcreate -n guest2 -L 20G storage
 \end{verbatim} 
-Mit \verb#lvm# kann der Status der Konfiguration überprüft werden. Dabei zeigt \verb#lvs# die logischen Volumes und \verb#pvs# die physischen. 
+Mit \verb#lvm# kann der Status der Konfiguration überprüft werden. Dabei zeigt der Befehl \verb#lvs# die Statistiken der Logical Volumes und \verb#pvs# die der Physical Volumes an. 
 \setupVerbatimOut
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -412,7 +410,8 @@ ln -s /dev/storage/guest1-swap /dev/etherd/e0.2
 Nötig wurde dieser Schritt, da beide Hosts mit der gleichen Konfiguration der VM arbeiten und daher jedes genutzte Blockdevice unter demselben Pfad auffindbar sein muss.
 
 \section{Konfiguration der Gast-VM }
-Der die Pfade der Datenspeicher von \verb#guest1# soll nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden. Hierzu werden in der Konfiguration von \verb#guest1# die Zeilen
+Die Pfade der Datenspeicher von \verb#guest1# müssen nun entsprechend den vorangegangenen Abschnitten angepasst werden, damit die VM auf beiden Hosts auf ihre Blockdevices zugreifen kann. Auf \verb#pcvirt02# wird dann AoE genutzt, auf \verb#pcvirt01# wird direkt auf das LV zugegriffen.
+Konkret werden zu diesem Zweck in der Konfiguration von \verb#guest1# die Zeilen
 \setupVerbatimOut
 \begin{verbatim}
 disk        = [
