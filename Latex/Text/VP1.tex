@@ -23,7 +23,7 @@ Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschloss
 \section{RAID}
 Für den RAID Verbund wurden die Platten \verb#sdb# und \verb#sdc# verwendet.
 
-Zum Erzeugen der GPT Partitionstabellen nutzten wir \verb#gdisk#, welches vorher installiert werden musste.
+Zum Erzeugen einer \emph{GUID Partition Table} (GPT) Partitionstabellen nutzten wir \verb#gdisk#, welches vorher installiert werden musste, da dies den designierten Nachfolgestandard für MBR-Partitionstabellen darstellt. Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich.
 \setupVerbatim{bash}
 \begin{verbatim}
 apt-get install gdisk
@@ -41,9 +41,10 @@ Abschließend wurde der RAID-Verbund über die beiden Partitionen \verb#/dev/sdb
 \begin{verbatim}
 mdadm --create /dev/md1 -n 2 -l 1 /dev/sdb2 /dev/sdc2
 \end{verbatim}
-Zur Überprüfung, ob die Erstellung des Verbundes erfolgreich war, wurde die Ausgabe von \verb#dmesg# betrachtet:
+Zur Überprüfung, ob die Erstellung des Verbundes erfolgreich war, wurden nacheinander die Ausgabe von \verb#dmesg# sowie \verb#mdstat# betrachtet:
 \setupVerbatimOut
 \begin{verbatim}
+$ dmesg | tail
 [  253.106706] sdb: sdb1 sdb2
 [  364.210743] sdc: sdc1 sdc2
 [  373.659167] sdb: sdb1 sdb2
@@ -59,7 +60,18 @@ Zur Überprüfung, ob die Erstellung des Verbundes erfolgreich war, wurde die Au
 [ 1223.952093] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
 [ 1223.952095] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
 [ 1223.952097] md: using 128k window, over a total of 488253248k.
+
+
+
+$ cat /proc/mdstat
+Personalities : [raid1] 
+md1 : active raid1 sdc2[1] sdb2[0]
+      488253248 blocks super 1.2 [2/2] [UU]
+      
+unused devices: <none>
 \end{verbatim}
+
+Aus der Zeile \verb#md1 : active raid1 sdc2[1] sdb2[0]# lässt sich schließen, dass das RAID-Device verfügbar ist. \verb#[UU]# zeigt an, dass beide gespiegelten Partitionen aktuell (Up) sind \cite{wiki_mdstat}.
 
 \section{LVM}
 Aufbauend auf dem RAID haben wir ein LVM-System angelegt. Dazu wurde \verb#/dev/md1#, also die RAID-Platte, mit \verb#pvcreate# als physisches Volume verwendet und mit \verb#vgcreate# in eine neue Volumegroup \verb#storage# eingebunden. 
@@ -323,13 +335,25 @@ Durch die Konfiguration des Kernels zu \verb#hvmloader# und Nutzung des Builders
 disk = [ <WEITERE KONFIGURATION> , 'file:/xen/iso/debian-7.0.0-amd64-netinst.iso,hdc:cdrom,r']
 \end{verbatim}
 
-Schnelle Performancetests mittels iperf zeigten die selbe Netzperformanz einer Vollvirtualisierten VM mit den vorherigen Paravirtualisierten. Dies ist nicht verwunderlich, da standardmässig im Kernel enthaltene Paravirtualisierungstreiber für Netzschnittstellen und Blockdevices genutzt werden, um hier eine hohe Performanz zu gewährleisten. 
-Abgeschaltet werden kann die Unterstützung mittels \verb#xen_platform_pci = 0# in der Konfiguration der VM. Tut man dies, so vermindert sich beispielsweise die mögliche TCP Datenrate auf ca. 1/3 der auf dem Host möglichen Übertragungsrate über physische Verbindungen, da die genutzte Emulation mittels qemu sehr langsam ist.
+Abbildung \ref{megaplot} vergleicht die Netzperformanz verschiedener VMs:
+\begin{itemize}
+\item paravirtualisierte VM (PVM)
+\item vollvirtualisierte VM mit Netzschnittstellenemulation durch qemu (HVM)
+\item vollvirtualisierte VM mit paravirtualisierten Netzschnittstellen Treibern (HVM\_PV)
+\end{itemize}
 
+Kurze Tests der TCP-Performanz zwischen der VM und dem Hostsystem mittels iperf zeigten eine unwesentlich geringere Netzperformanz einer vollvirtualisierten VM (HVM_PV) mit den vorherigen Paravirtualisierten (PVM). Dies ist nicht verwunderlich, da standardmässig im Kernel enthaltene Paravirtualisierungstreiber für Netzschnittstellen und Blockdevices genutzt werden, um hier eine hohe Performanz zu gewährleisten. 
+Abgeschaltet werden kann die Unterstützung mittels \verb#xen_platform_pci = 0# in der Konfiguration der VM . Tut man dies, so vermindert sich beispielsweise die mögliche TCP Datenrate auf ca. 1/3 der auf dem Host möglichen Übertragungsrate über physische Verbindungen, da die genutzte Emulation mittels qemu sehr langsam ist.
+
+\begin{figure}
+\input{plot1}
+\label{megaplot}
+\caption{Vergleich der Netz IO Performanz mittels \verb#iperf#}
+\end{figure}
 \chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
 \section{Einrichtung Kernel Modul aoe auf pcvirt01 + pcvirt02}
-Vor der Einrichtung von AoE auf den Hosts pcvirt01 und pcvirt02 haben wir in den Konfigurationen der Kernels nachgesehen, ob AoE unterstützt wird. 
+Vor der Einrichtung von \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} auf den Hosts pcvirt01 und pcvirt02 haben wir in den Konfigurationen der Kernels nachgesehen, ob AoE unterstützt wird. 
 \setupVerbatimOut
 \begin{verbatim}
 grep ATA_OVER /boot/config-`uname -r`
@@ -352,7 +376,7 @@ vbladed 0 1 br-guest /dev/storage/guest1-disk
 vbladed 0 2 br-guest /dev/storage/guest1-swap
 \end{verbatim}
 Damit die Devices auch nach einem Neustart wieder freigegeben werden, kommen die zwei letzten Befehle auch in \verb#/etc/rc.local#. 
-\section{Grundlegende Einrichtung des Initiators von pcvirt02}
+\section{Grundlegende Einrichtung des Clients von pcvirt02}
 Da \verb#pcvirt02# noch nicht konfiguriert ist, wird dieser analog zu \verb#pcvirt01# soweit wie nötig eingerichtet, wobei auf einen Open vSwitch verzichtet wurde.
 \setupVerbatim{bash}
 \begin{verbatim}
@@ -380,12 +404,14 @@ aoe-stat
 \end{verbatim}
 
 \section{Konfiguration auf dem Target}
-Da die von uns genutzte AoE-Implementierung keine Targets, die auf dem selben Host bereitstellt werden, findet, haben wir die Targets auf \verb#pcvirt01# durch Symlinks an die richtige Position im Dateisystem gelinkt.
+Da die von uns genutzte AoE-Implementierung keine Targets, die auf dem selben Host bereitstellt werden, findet, haben wir die Targets auf \verb#pcvirt01# mittels Symlinks an die richtige Position im Verzeichnissbaum gelinkt.
 \setupVerbatimOut
 \begin{verbatim}
 ln -s /dev/storage/guest1-disk /dev/etherd/e0.1
 ln -s /dev/storage/guest1-swap /dev/etherd/e0.2 
 \end{verbatim}
+
+Nötig wurde dieser Schritt, da beide Hosts mit der gleichen Konfiguration der VM arbeiten und daher das Blockdevice unter dem selben Pfad auffindbar sein muss.
 
 \section{Konfiguration von guest1}
 guest1 soll nun seinen Datenspeicher mittels AoE erhalten. Dazu müssen diese AoE Devices auch in der XEN Konfiguration verwendet werden:
@@ -401,6 +427,15 @@ disk        = [
                   'phy:/dev/etherd/e0.1,xvda2,w',
                   'phy:/dev/etherd/e0.2,xvda1,w',
               ]
+\end{verbatim}
+
+Nach einem Neustart der VM war sie weiterhin verfügbar. Nach dem Beenden der VM un anschließendem Kopieren der Konfigurationsdatei auf das entfernte System \verb#pcvirt02# konnte sie auch dort ausgeführt werden. Mittels \verb#tshark# \verb#-R aoe# konnten AoE PDUs beobachtet werden (Ausgabe verkürzt dargestellt):
+\setupVerbatimOut
+\begin{verbatim}
+ 79.600230 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command Response ATA:Read ext
+ 79.600390 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command Response ATA:Read ext
+ 84.569842 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command Request ATA:Write ext
+ 84.569850 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command Request ATA:Write ext
 \end{verbatim}
 
 \chapter{Live Migration einer VM}
@@ -438,7 +473,7 @@ Migration schlägt wieder fehl. Ursache: VM verwendet neueren Kernel, der auf Zi
 \normalsize
 
 \subsection {3. Versuch $\Rightarrow$ Falsche Xen Versionen}
-Auch nach der Abänderung der Konfiguration der VM auf den älteren Kernel schlägt die Migration wieder fehl. Ursache: VMs lassen sich bei Xen nur auf der gleichen Version live migrieren. Lediglich eine Live Migration von einer Xen Version zur nächst höheren ist möglich (vgl. \url{http://wiki.xen.org/wiki/Xen_Version_Compatibility})
+Auch nach der Abänderung der Konfiguration der VM auf den älteren Kernel schlägt die Migration wieder fehl. Ursache: VMs lassen sich bei Xen nur auf der gleichen Version live migrieren. Lediglich eine Live Migration von einer Xen Version zur nächst höheren ist möglich \cite{wiki_xen_version}.
 \\
 \\
 \Large
