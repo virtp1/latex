@@ -28,8 +28,8 @@
 % !!!!
 % !!!! Auswählen des Typs der Ausarbeitung
 % !!!!
-\newcommand{\typeOfThesis}[0]{Diplomarbeit}
-%\newcommand{\typeOfThesis}[0]{Fortgeschrittenenpraktikum}
+%\newcommand{\typeOfThesis}[0]{Diplomarbeit}
+\newcommand{\typeOfThesis}[0]{Praktikumsausarbeitung}
 %\newcommand{\typeOfThesis}[0]{SEP}
 %\newcommand{\typeOfThesis}[0]{Studienarbeit}
 
@@ -37,21 +37,22 @@
 % !!!!
 % !!!! Titel der Arbeit
 % !!!!
-\newcommand{\titleOfThesisOne}[0]{Titel von SEP/FoPra/DA}
-\newcommand{\titleOfThesisTwo}[0]{Titel 2. Zeile}
-\newcommand{\titleOfThesisThree}[0]{Titel 3. Zeile}
+\newcommand{\titleOfThesisOne}[0]{Virtualisierte Systeme - SS2013}
+\newcommand{\titleOfThesisTwo}[0]{Gruppe 1}
+\newcommand{\titleOfThesisThree}[0]{}
 
 
 % !!!!
 % !!!! Verfasser der Arbeit
 % !!!!
-\newcommand{\authorOfThesis}[0]{Vorname Nachname}
-
+\newcommand{\authorOfThesis}[0]{Sebastian Franz}
+\newcommand{\authorOfThesisOne}[0]{Michael Kasch}
+\newcommand{\authorOfThesisTwo}[0]{Christian Simon}
 
 % !!!!
 % !!!! Aufgabensteller
 % !!!!
-\newcommand{\aufgabensteller}[0]{Prof. Dr. Dieter Kranzlm\"{u}ller}
+\newcommand{\aufgabensteller}[0]{Dr. Vitalian Danciu}
 %\newcommand{\aufgabensteller}[0]{Prof. Dr. Heinz-Gerd Hegering}
 %\newcommand{\aufgabensteller}[0]{Prof. Dr. Claudia Linnhoff-Popien}
 
@@ -67,9 +68,9 @@
 % !!!!
 % !!!! Abgabedatum
 % !!!!
-\newcommand{\abgabeTagZahl}[0]{14}
-\newcommand{\abgabeMonatText}[0]{Juli}
-\newcommand{\abgabeJahrZahl}[0]{2006}
+\newcommand{\abgabeTagZahl}[0]{17}
+\newcommand{\abgabeMonatText}[0]{Juni}
+\newcommand{\abgabeJahrZahl}[0]{2013}
 
 
 % !!!!
@@ -111,7 +112,7 @@
 
 \lstset{language=sh, 
         keywordstyle=\ttfamily,
-        commentstyle=\color{blue}, 
+        commentstyle=, 
         breaklines=true,
         numbers=left, 
         numberstyle=\tiny, 
@@ -147,8 +148,8 @@
 %
 % Diverse Verzeichnisse
 %
-%\setcounter{tocdepth}{2} % Begrenzen der Verzeichnistiefe
-%\tableofcontents     % Inhaltsverzeichnis
+\setcounter{tocdepth}{2} % Begrenzen der Verzeichnistiefe
+\tableofcontents     % Inhaltsverzeichnis
 %\listoffigures       % Liste aller Abbildungen
 %\listoftables        % Liste aller Tabellen
 
@@ -158,8 +159,8 @@
 % Kapitel
 %
 \input{VP1}
-
-
+\nocite{skript}
+\nocite{skriptp}
 %
 % Anhänge
 %

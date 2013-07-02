@@ -54,6 +54,10 @@
 \usepackage{wrapfig}
 \usepackage{ifthen}
 
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepgfplotslibrary{units}
+
 %\usepackage{tabularx} % für Tabellen automagischer Feldbreiten berechnung
 %\usepackage{multirow} % für Tabellenfelder, die sich über mehrere Zeilen erstrecken
 %\usepackage{subfigure} % um mehrere Abbildungen in einer figure-Umgebung zu strukturieren
@@ -282,7 +286,7 @@
   }%
   \newcommand{\setupVerbatimOut}{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{}%
+    \lstset{language=,frame=,basicstyle=, caption={[]}}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \newcommand{\setupVerbatimCaption}[3]{%
@@ -441,10 +445,10 @@
 
   % Titelseiten
   \ifTUM%
-    %\input{tu_titel}%
+    \input{tu_titel}%
   \fi%
   \ifLMU%
-    %\input{lmu_titel}%
+    \input{lmu_titel}%
   \fi%
   
   % Erklärung
