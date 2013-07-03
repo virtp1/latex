@@ -184,6 +184,12 @@ Anschließend wurde die Konfiguration, durch einen Neustart geladen. Die Konnekt
 Die grundlegenden Anforderungen an die Infrastruktur des Hostrechners sind damit erfüllt, so dass in dem nächsten Kapitel die erste VM erstellt werden kann.
 
 \chapter{VM}
+Nachdem nun alle notwendigen Vorbereitungen abgeschlossen waren, konnte die erste VM erstellt werden. Dazu wurde das Kommando \verb#xen-create-image# genutzt, welches die Erstellung einer paravirtualisierten VM weitestgehend automatisiert. Es wird zuerst die VM \verb#guest1# mit dem Betriebssystem Debian Wheezy, anschließend dann \verb#guest2# mit Debian Squeezy erstellt.
+\\
+Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wiederum mit Debian Wheezy erstellt. Bei dieser Vollvirtualisierung läuft das Gastbetriebssystem prinzipiell ohne Anpassungen an den Hypervisor. Um IO Operationen zu beschleunigen werden jedoch spezielle Treiber für Netzschnittstellen und Festplatten verwendet. 
+\\
+Die Performanz der verschiedenen Virtualisierungsmethoden bei Netzschnittstellen wird im letzten Abschnitt des Kapitel anhand eines Experimentes untersucht.
+
 
 
 \section{Die erste paravirtualisierte VM}
@@ -327,6 +333,7 @@ Ein nebenbei laufender \verb#tcpdump# zeigte sehr große eingehende Ethernet Fra
 Zusätzlich wurde getestet, ob die Bridges und \verb#vif#-Schnittstellen mit Jumbo-Frames von 9000 Byte Größe umgehen können. Nach Erhöhung der MTU auf der Bridge, den \verb#vif#-Schnttstellen und auf den Schnittstellen des Gastes konnten Jumbo-Frames genutzt werden.
 
 \section{HVM}
+\label{hvm_vm}
 Neben der Paravirtualisierung unterstützt XEN noch Vollvirtualiserung. Hierzu wird von XEN mit Hilfe der Virtualisierungsunterstützung der CPU ein Hypervisor installiert, der die Traps abfängt und die entsprechenden Hypercalls am eigentlichen XEN-Hypervisor aufruft.
 
 Um eine vollvirtualisierte VM zu erstellen, muss die Konfiguration der VM angepasst werden (gekürzte Darstellung):
