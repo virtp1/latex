@@ -529,6 +529,12 @@ Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|pi
 ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert wird in Abschnitt \ref{Gratuitous} nachgewiesen.
 
 
+\begin{figure}
+\input{plot2}
+\caption{Übertragung von UDP Paketen von VM zum Host während Migration}
+\label{migration_plot}
+\end{figure}
+
 \section{Beobachtungen der Migration mit tshark} \label{mig_tcpdump}
 Um ein weiteres Verständnis der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
 
