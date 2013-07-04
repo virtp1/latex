@@ -584,7 +584,7 @@ Nachden nun VMs zwischen den Hosts migriert werden können besteht nun das Probl
 
 \chapter{VLAN für br-vmonly zwischen zwei Hosts}
 \label{vlan_trunk}
-Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss das LAN in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen die VLAN ID 1234.
+Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss der Datenverkehr in dieser virtuellen Netzes in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen hierfür die VLAN ID 1234.
 
 \section {Vorarbeiten auf auf dem zweiten Hostsystem}\label{ovs2}
 Da Gruppe 2 aus dem Praktium ausgestiegen ist, können wir den Host für unsere Zwecke nutzen. Zuerst wird wie in Kapitel \ref{chap:whezzy_ugprade} der Host auf wheezy upgegraded.
