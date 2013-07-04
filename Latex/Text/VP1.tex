@@ -472,21 +472,22 @@ Aus diesem Grund wird die VM nun abermals auf \verb#pcvirt01# beendet, ihre Konf
 Hiermit ist die Konfiguration von AoE abgeschlossen und die Blockdevices von \verb#guest1# auch von \verb#pcvirt02# erreichbar. Dies sollte nun durch den gemeinsamen Datenspeicher Live-Migrationen zwischen den beiden Hostsystemen ermöglichen.
 
 \chapter{Live-Migration einer VM}
-Durch den nun verfügbaren gemeinsamen Datenspeicher ist es nun alle Vorraussetzungen geschaffen Versuche mit Live-Migrationen durchzuführen. Im Folgenden wird in \ref{xend_konfig} die nötige Konfiguration des Xen Management Daemons \verb#xend# beschrieben. In Abschnitt \ref{mig_vers} werden dann Stolpersteine bei der Migration ausgeräumt bis eine erfolgreiche Migration durchgeführt werden kann. Schließlich wird in Abschnitt \ref{mig_tcpdump} der Datenverkehr wärend einer Migration beobachtet und ausgewertet.
-\section{Konfiguration von xend auf beiden Rechnern}\label{xend_konfig}
+Durch den verfügbaren gemeinsamen Datenspeicher waren nun alle Vorraussetzungen geschaffen, Versuche mit Live-Migrationen durchzuführen. Im Folgenden wird in nächsten Abschnitt die nötige Konfiguration des Xen-Management-Daemons \verb#xend# beschrieben. In Abschnitt \ref{mig_vers} werden dann Stolpersteine bei der Migration ausgeräumt, bis eine erfolgreiche Migration durchgeführt werden kann. Schließlich wird in Abschnitt \ref{mig_tcpdump} der Datenverkehr während einer Migration beobachtet und ausgewertet.
+\section{Konfiguration von xend}\label{xend_konfig}
 Um VMs migrieren zu können, muss auf beiden Hostsystemen die Konfigurationsdatei \verb#/etc/xen/xend-# \verb#config.sxp# angepasst werden \cite{man_xendconfig}:
 \setupVerbatimOut
 \begin{verbatim}
 (xend-relocation-server yes)
 (xend-relocation-hosts-allow '')
 \end{verbatim} 
-Nach einem Neustart von \verb#xend# mit \verb#/etc/init.d/xen restart# ist nun eine Migration theoretisch möglich. 
+Nach einem Neustart von \verb#xend# mit \verb#/etc/init.d/xen restart# ist somit eine Migration theoretisch möglich. 
 
-\section{Live Migration einer Gast-VM zwischen zwei Hostsystemen}
+\section{Live Migration einer Gast-VM}
+\label{mig_vers}
 Nachdem die grundlegende Konfiguration nun abgeschlossen ist, die Pizza geliefert wurde und die beiden \verb#xend# Instanzen miteinander kommunizieren können, beginnen die Migrationsversuche der VM \verb#guest1# von \verb#pcvirt01# zu \verb#pcvirt02#.
 
-\subsection{1. Versuch $\Rightarrow$ Bridge fehlt}
-Starte VM auf \verb#pcvirt01# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#:
+\subsection{Erster Versuch $\Rightarrow$ Bridge fehlt}
+Starte die VM auf \verb#pcvirt01# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#:
 \setupVerbatimOut
 \begin{verbatim}
 xm create guest1.cfg
@@ -497,10 +498,10 @@ Die Migration schlägt fehl, der Maschinenstatus ist verloren.
 \\
 Ursache: die von der VM benötigte Bridge \verb#br-vmonly# ist auf \verb#pcvirt02# noch nicht eingerichtet und daher nicht verfügbar.
 \\
-$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft und die Migration abgebrochen, ohne dass der VM State verloren geht? 
+$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft und die Migration abgebrochen, ohne dass der VM-State verloren geht? 
 
-\subsection {2. Versuch $\Rightarrow$ Kernel fehlt}
-Erzeuge die fehlende Bridge auf \verb#pcvirt02#, starte die VM auf \verb#pcvirt01# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#:
+\subsection {Zweiter Versuch $\Rightarrow$ Kernel fehlt}
+Erzeuge die fehlende Bridge auf \verb#pcvirt02#, starte die VM auf \verb#pcvirt01# und migriere diese von \verb#pcvirt01# nach \verb#pcvirt02#.
 \\
 Migration schlägt wieder fehl.\\ 
 Ursache: Die VM verwendet einen neueren Kernel, der auf dem Zielsystem \verb#pcvirt02# nicht verfügbar ist.
@@ -510,27 +511,27 @@ Ursache: Die VM verwendet einen neueren Kernel, der auf dem Zielsystem \verb#pcv
 \textbf{$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft \dots?}
 \normalsize
 
-\subsection {3. Versuch $\Rightarrow$ Falsche Xen Versionen}
-Auch nach Abänderung der VM-Konfiguration auf den älteren Kernel, schlägt die Migration wieder fehl. 
+\subsection {Dritter Versuch $\Rightarrow$ Falsche Xen Versionen}
+Auch nach Abänderung des Kernels in der VM-Konfiguration auf eine ältere Version, schlägt die Migration wieder fehl. 
 \\
-Ursache: VMs können bei Xen nur zwischen Hosts der gleichen Version live migriert werden. Die einzige Ausnahme ist die Migration zur nächsthöheren Xen Version, damit die Durchführung von Updates im laufenden Betrieb ermöglicht wird \cite{wiki_xen_version}.
+Ursache: VMs können bei Xen nur zwischen Hosts der gleichen Version live migriert werden. Die einzige Ausnahme ist die Migration zur nächsthöheren Xen Version, damit die Durchführung von Updates im laufenden Betrieb möglich ist \cite{wiki_xen_version}.
 \\
 \\
 \Large
 \textbf{$\Rightarrow$ Warum wird das nicht in der \emph{Signalling Phase} geprüft \dots?}
 \normalsize
 
-\subsection {4. Versuch $\surd$ }
-Zur Durchführung des abschließenden Versuchs wurde nun der Quell- bzw. der Zielhost vertauscht, so dass von \verb#pcvirt02# auf \verb#pcvirt01# migriert wird, da hierbei die korrekte Migrationsrichtung von einer älteren Xen Version auf eine neuere eingehalten wird.
+\subsection {Vierter Versuch $\surd$ }
+Zur Durchführung einer erfolgreichen Migration wurde nun der Quell- und Zielhost vertauscht, sodass von \verb#pcvirt02# auf \verb#pcvirt01# migriert wird. Hierbei wird die korrekte Migrationsrichtung von einer älteren Xen-Version auf eine neuere eingehalten.
 \setupVerbatimOut
 \begin{verbatim} 
 xm create guest1.cfg
 xm migrate --live guest1 192.168.1.131
 \end{verbatim}
 
-Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100ms im Netz unerreichbar war. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit laufenden Services teilweise ebenfalls Ausfallzeiten geringer 100ms gemessen wurden. Ein Gratuitous
-ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert wird in Abschnitt \ref{Gratuitous} nachgewiesen.
-
+Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100 ms im Netz unerreichbar war. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit laufenden Services teilweise ebenfalls Ausfallzeiten geringer 100 ms gemessen wurden.
+\\
+Ein Gratuitous ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert, wird in Abschnitt \ref{Gratuitous} nachgewiesen.
 
 \begin{figure}
 \input{plot2}
