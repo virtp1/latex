@@ -25,8 +25,10 @@ in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen
 \\
 Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS-Einträgen außerhalb der Praktikumsumgebung hatte.
 
+Der nächste Schritt ist nun die Einrichtung eines Datenspeichers für unsere Virtuellen Maschinen.
+
 \chapter{Storage}
-Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen \emph{Redundant Array of Independent Disks} (RAID) Verbund über zwei Festplatten zu erzeugen. Wir entschieden uns für Level 1. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem \emph{Logical Volume Manager} (LVM) erzeugte \emph{Logical Volumes} (LV) dienen. 
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen \emph{Redundant Array of Independent Disks} (RAID) Verbund über zwei Festplatten zu erzeugen (vgl. Abschnitt \ref{raid}). Wir entschieden uns für RAID Level 1. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem \emph{Logical Volume Manager} (LVM) erzeugte \emph{Logical Volumes} (LV) dienen, was in Abschnitt \ref{lvm} umgesetzt wird.
 \section{RAID}
 \label{raid}
 Für einen RAID-Verbund werden mindestens zwei Festplatten benötigt, welche möglichst identisch sein sollten. Wir verwenden die Platten \verb#sdb# und \verb#sdc# auf \verb#pcvirt01#. \\
@@ -186,7 +188,7 @@ Nachdem nun alle notwendigen Vorbereitungen abgeschlossen waren, konnte die erst
 \\
 Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wiederum mit Debian Wheezy erstellt. Bei dieser Vollvirtualisierung läuft das Gastbetriebssystem prinzipiell ohne Anpassungen an den Hypervisor. Um IO-Operationen zu beschleunigen werden jedoch spezielle Treiber für Netzschnittstellen und Festplatten verwendet. 
 \\
-Die Performanz der verschiedenen Virtualisierungsmethoden bei Netzschnittstellen wird im letzten Abschnitt des Kapitels anhand eines Experimentes untersucht.
+Die Performanz der verschiedenen Virtualisierungsmethoden bei Netzschnittstellen wird im letzten Abschnitt des Kapitels (Abschnitt \ref{perf}) anhand eines Experimentes untersucht.
 
 \section{Erstellung einer paravirtualisierten VM}
 Um die ersten paravirtualisierten VMs auf dem Host \verb#pcvirt01# zu erzeugen, wurde das Skript \verb#xen-create-image# genutzt. Diesem kann man über diverse Parameter Einstellungen übergeben. Des weiteren übernimmt es die Installation der paravirtualisierten Gastbetriebssysteme für den Nutzer.
@@ -357,6 +359,8 @@ Durch die Konfiguration des Kernels zu \verb#hvmloader# und Nutzung des Builders
 disk = [ <WEITERE KONFIGURATION> , 'file:/xen/iso/debian-7.0.0-amd64-netinst.iso,hdc:cdrom,r']
 \end{verbatim}
 
+\section{Netzperformanz unterschiedlicher VM Typen}\label{perf}
+
 Nun wird durch ein Experiment die Netzperformanz verschiedener VM-Typen mittels \verb#iperf# zwischen Hostmaschine und VM gemessen. Es wird zwischen folgenden Schnittstellentypen unterschieden:
 \begin{itemize}
 \item paravirtualisierte VM (PVM)
@@ -376,7 +380,7 @@ Die jetzige Konfiguration des Hostsystems \verb#pcvirt01# kann somit VMs erfolgr
 \end{figure}
 \chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
-Damit die VMs nicht fest an einen Host gebunden sind, soll in diesem Kapitel der Hintergrundspeicher der VM \verb#guest1# für weitere Hosts freigegeben werden. Dazu wurde \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} eingesetzt. Für diesen Zweck hätte auch \emph{internet Small Computer System Interface} (iSCSI) \cite{rfc3720} zum Einsatz kommen können. Da bereits die andere Gruppe diese Technologie eingesetzt hatte, haben wir uns für AoE entschieden. 
+Damit die VMs nicht fest an einen Host gebunden sind, soll in diesem Kapitel der Hintergrundspeicher der VM \verb#guest1# für weitere Hosts freigegeben werden. Dazu wurde \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} eingesetzt. Eine Alternative hierzu wäre das \emph{internet Small Computer System Interface} (iSCSI) \cite{rfc3720}. Da bereits die andere Gruppe diese Technologie eingesetzt hatte, haben wir uns für AoE entschieden um eine weitere mögliche Technik zu demonstrieren. 
 \\
 Die anschließenden Abschnitte beschreiben die Einrichtung, Konfiguration und Inbetriebnahme von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02#.
 
@@ -482,7 +486,7 @@ Um VMs migrieren zu können, muss auf beiden Hostsystemen die Konfigurationsdate
 \end{verbatim} 
 Nach einem Neustart von \verb#xend# mit \verb#/etc/init.d/xen restart# ist somit eine Migration theoretisch möglich. 
 
-\section{Live Migration einer Gast-VM}
+\section{Live-Migration einer Gast-VM}
 \label{mig_vers}
 Nachdem die grundlegende Konfiguration nun abgeschlossen ist, die Pizza geliefert wurde und die beiden \verb#xend# Instanzen miteinander kommunizieren können, beginnen die Migrationsversuche der VM \verb#guest1# von \verb#pcvirt01# zu \verb#pcvirt02#.
 
@@ -529,13 +533,13 @@ xm create guest1.cfg
 xm migrate --live guest1 192.168.1.131
 \end{verbatim}
 
-Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100 ms im Netz unerreichbar war. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit laufenden Services teilweise ebenfalls Ausfallzeiten geringer 100 ms gemessen wurden.
+Um die Unerreichbarkeit der VM wärend der Migration zu messen, wurde mittels einer angepassten version von iperf -- die eine höhere zeitliche Auflösung gestattet -- ein UDP-Datestrom mit 100 MBit generiert. Da die Größe der UDP Segmente 1470 Byte beträgt sind 8500 Pakete pro Sekunde respektive 850 Packete pro 100 Millisekunden nötig. Gemessen wurde die Anzahl der empfangenen UDP Segmente. Die Ergebnisse sind in Abbilung \ref{migration_plot} dargestellt. Der Einbruch findet zum Zeitpunkt der Stop-and-Copy Phase statt. Der Abfall von \~850 auf \~200 Pakete pro 100 ms lässt auf einen Ausfall von \~75 ms schließen. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit mehr laufenden Services teilweise ebenfalls Ausfallzeiten um die 80 ms bis 100 ms gemessen wurden.
 \\
 Ein Gratuitous ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert, wird in Abschnitt \ref{Gratuitous} nachgewiesen.
 
 \begin{figure}
 \input{plot2}
-\caption{Übertragung von UDP Paketen von VM zum Host während Migration}
+\caption{Übertragung von UDP Paketen von VM zu einem Host während der Migration der VM}
 \label{migration_plot}
 \end{figure}
 
