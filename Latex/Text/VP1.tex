@@ -40,7 +40,12 @@ Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschloss
 \label{raid}
 Für einen RAID-Verbund werden mindestens zwei Festplatten benötigt, welche möglichst identisch sein sollten. Wir verwenden die Platten \verb#sdb# und \verb#sdc# auf \verb#pcvirt01#. \\
 Zum Erzeugen einer \emph{GUID Partition Table} (GPT) nutzten wir \verb#gdisk#, welches vorher installiert werden musste. \\ 
-Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, jedoch stellt GPT den designierten Nachfolgestandard für MBR-Partitionstabellen dar. \todo{satz ggf. verbessern}
+Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, jedoch stellt GPT den designierten Nachfolgestandard für MBR-Partitionstabellen dar. Ein paar der Vorteile einer GPT Partitionstabelle gegenüber einer MBR Partitionstabelle sind\cite{gpt}:
+\begin{itemize} 
+\item die Unterstützung von Laufwerken mit bis zu $2^{64}$ Sektoren,
+\item die Redundanz der Tabelle am Ende der Festplatte, die vor dem Verlust der Tabelle im Falle eines defekten Sektors schützt,
+\item die Absicherung der kritischen Bereiche der Tablle mittels CRC
+\end{itemize}
 \setupVerbatim{bash}
 \begin{verbatim}
 apt-get install gdisk
@@ -549,7 +554,7 @@ Um ein weiteres Verständnis der Migration zu erhalten, haben wir nun eine erfol
 \subsection{Erfolgreiche Migration von Xen 4.0 auf 4.1}
 Es wird eine TCP-Verbindung von \verb#pcvirt02#, wo die VM derzeit läuft, nach \verb#pcvirt01# aufgebaut und darüber ein sehr einfaches Protokoll genutzt. Dabei meldet sich \verb#pcvirt02# mit einem \verb|(receive)| bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# den \emph{LinuxGuestRecord} mit sämtlichen Einstellungen und Zuständen der VM an \verb#pcvirt01#. Anschließend findet eine Übertragung der RAM-Inhalte der VM \verb#guest1# von \verb#pcvirt02#  an \verb#pcvirt01# statt. Den erfolgreichen Empfang quittiert \verb#pcvirt01# mit einem \verb|(ok)|.
 
-Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen den Hosts:
+Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen den Hosts. Hervorgehoben sind jene Konfigurationsparameter, an denen im Falle der vorherigen gescheiterten Migrationen dies im Voraus hätte erkannt werden müssen (Zeilenumbrüche zur Erhöhung der Lesbarkeit eingefügt):
 \setupVerbatimOut
 \begin{verbatim}
 # Von pcvirt02=> nach <=pcvirt01
@@ -557,8 +562,113 @@ Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen d
 > (receive)
 < (ready receive)
 > LinuxGuestRecord
-(domain (domid 9) (cpu_weight 256) (cpu_cap 0) (on_crash restart) (uuid 42ed8dbf-c245-2937-f1fc-b2d6d1620aa2) (bootloader_args ) (vcpus 3) (name guest1) (on_poweroff destroy) (on_reboot restart) (cpus (() () ())) (description ) (bootloader ) (maxmem 512) (memory 512) (shadow_memory 0) (vcpu_avail 7) (features ) (on_xend_start ignore) (on_xend_stop ignore) (start_time 1369930035.4) (cpu_time 4.414449199) (online_vcpus 3) (image (linux (kernel /boot/vmlinuz-2.6.32-5-amd64) (ramdisk /boot/initrd.img-2.6.32-5-amd64) (args 'root=/dev/xvda2 ro ') (superpages 0) (tsc_mode 0) (videoram 4) (pci ()) (nomigrate 0) (notes (HV_START_LOW 18446603336221196288) (FEATURES '!writable_page_tables|pae_pgdir_above_4gb') (VIRT_BASE 18446744071562067968) (GUEST_VERSION 2.6) (PADDR_OFFSET 0) (GUEST_OS linux) (HYPERCALL_PAGE 18446744071578882048) (LOADER generic) (SUSPEND_CANCEL 1) (PAE_MODE yes) (ENTRY 18446744071584211456) (XEN_VERSION xen-3.0)))) (status 2) (state -b----) (store_mfn 1190820) (console_mfn 1190819) (device (vif (bridge br-guest) (uuid 7f0b8aa6-f89d-e27c-3ba4-6db424f66858) (script /etc/xen/scripts/vif-bridge) (ip 192.168.10.12) (mac 00:16:3E:95:DE:AD) (backend 0))) (device (vif (bridge br-vmonly) (uuid aef672ce-c13d-2cb2-1b93-040c26ea87ee) (script /etc/xen/scripts/vif-bridge) (ip 192.168.11.12) (mac 00:16:3E:95:BE:EF) (backend 0))) (device (vbd (protocol x86_64-abi) (uuid 1305fde6-95c3-8716-1e73-418fca163709) (bootable 1) (dev xvda2:disk) (uname phy:/dev/etherd/e0.1) (mode w) (backend 0) (VDI ))) (device (vbd (protocol x86_64-abi) (uuid 1e934d97-a69f-f89d-2c52-78e4cee936b6) (bootable 0) (dev xvda1:disk) (uname phy:/dev/etherd/e0.2) (mode w) (backend 0) (VDI ))) (device (console (protocol vt100) (location 2) (uuid 7a60ec21-8fae-9bb0-7223-b3840d2c3c52))) (change_home_server False))
->[viele Daten mainly RAMcopy]
+(domain 
+	(domid 9) 
+	(cpu_weight 256) 
+	(cpu_cap 0) 
+	(on_crash restart) 
+	(uuid 42ed8dbf-c245-2937-f1fc-b2d6d1620aa2) 
+	(bootloader_args ) 
+	(vcpus 3) 
+	(name guest1) 
+	(on_poweroff destroy) 
+	(on_reboot restart) 
+	(cpus (() () ()))
+	(description ) 
+	(bootloader ) 
+	(maxmem 512) 
+	(memory 512) 
+	(shadow_memory 0) 
+	(vcpu_avail 7) 
+	(features ) 
+	(on_xend_start ignore) 
+	(on_xend_stop ignore) 
+	(start_time 1369930035.4) 
+	(cpu_time 4.414449199) 
+	(online_vcpus 3) 
+	(image 
+		(linux 
+			(@\bfseries kernel@ @\bfseries /boot/vmlinuz-2.6.32-5-amd64@)
+			(ramdisk /boot/initrd.img-2.6.32-5-amd64) 
+			(args 'root=/dev/xvda2 ro ') 
+			(superpages 0) 
+			(tsc_mode 0) 
+			(videoram 4) 
+			(pci ()) 
+			(nomigrate 0) 
+			(notes (HV_START_LOW 18446603336221196288) 
+				(FEATURES '!writable_page_tables|pae_pgdir_above_4gb') 
+				(VIRT_BASE 18446744071562067968) 
+				(GUEST_VERSION 2.6) 
+				(PADDR_OFFSET 0) 
+				(GUEST_OS linux) 
+				(HYPERCALL_PAGE 18446744071578882048) 
+				(LOADER generic) 
+				(SUSPEND_CANCEL 1) 
+				(PAE_MODE yes) 
+				(ENTRY 18446744071584211456) 
+				(@\bfseries XEN\_VERSION@ @\bfseries xen-3.0@)
+			)
+		)
+	) 
+	(status 2) 
+	(state -b----) 
+	(store_mfn 1190820) 
+	(console_mfn 1190819) 
+	(device 
+		(vif 
+			(bridge br-guest) 
+			(uuid 7f0b8aa6-f89d-e27c-3ba4-6db424f66858) 
+			(script /etc/xen/scripts/vif-bridge) 
+			(ip 192.168.10.12) 
+			(mac 00:16:3E:95:DE:AD) 
+			(backend 0)
+		)
+	) 
+	(device 
+		(vif 
+			(@\bfseries bridge@ @\bfseries br-vmonly@)
+			(uuid aef672ce-c13d-2cb2-1b93-040c26ea87ee) 
+			(script /etc/xen/scripts/vif-bridge) 
+			(ip 192.168.11.12) 
+			(mac 00:16:3E:95:BE:EF) 
+			(backend 0)
+		)
+	) 
+	(device 
+		(vbd 
+			(protocol x86_64-abi) 
+			(uuid 1305fde6-95c3-8716-1e73-418fca163709) 
+			(bootable 1) 
+			(dev xvda2:disk) 
+			(uname phy:/dev/etherd/e0.1) 
+			(mode w) 
+			(backend 0) 
+			(VDI )
+		)
+	) 
+	(device 
+		(vbd 
+			(protocol x86_64-abi) 
+			(uuid 1e934d97-a69f-f89d-2c52-78e4cee936b6) 
+			(bootable 0) 
+			(dev xvda1:disk) 
+			(uname phy:/dev/etherd/e0.2) 
+			(mode w) 
+			(backend 0) 
+			(VDI )
+		)
+	) 
+	(device 
+		(console 
+			(protocol vt100) 
+			(location 2) 
+			(uuid 7a60ec21-8fae-9bb0-7223-b3840d2c3c52)
+		)
+	) 
+	(change_home_server False)
+)
+>[viele Daten die vor allem den Kopiervorgang des RAM zeigen]
 <(ok)
 \end{verbatim}
 \label{xen_bullshit}
@@ -628,9 +738,9 @@ iface br-vmonly inet manual
 \end{verbatim}
 
 \section{VLAN über Switch}
-Nun wird die Bridge \verb#br-vmonly# auf beiden Hostsystemen so umgebaut, dass alle Pakete für sie über \verb#br-guest# mit dem VLAN Tag 1234 laufen.
-\todo{Ausführlicher Beschreiben}
-\setupVerbatimOut
+Um die Ethernet-Rahmen der Bridge \verb#br-vmonly# über das physische Netz zwischen den zwei Hostsystemen zu transportieren, müssen diese gemäß dem Standard IEEE802.1Q \cite{ieee8021q} mit einem VLAN Tag versehen werden. Hierbei handelt es sich um eine Ergänzung des Ethernet-Headers um zwei weitere Felder, bzw. wenn man so will, um eine Ergänzung mit einem weiteren Header. Konkret werden vor dem Ethertype des ursprünglichen Ethernet-Frames 4 Byte eingefügt. Hierbei werden die ersten beiden Byte (der \emph{Tag Protocol Identifier}) auf den Wert 0x8100 gesetzt, was den Ethernet-Rahmen als VLAN nutzend kennzeichnet, oder als quasi-Ethertype für VLAN interpretiert werden kann. Die weiteren 2 Byte enthalten 3 Bit für Benutzer-Prioritäten, 1 weiteres Kontrollbit für Kompatibilitätszwecke zwischen Token-Ring und Ethernet, sowie den 12 Bit langen VLAN Tag. Daran anschließend folgt dann der ursprüngliche Ethertype des Rahmens.
+
+Um den OVS so zu konfigurieren, dass Rahmen der Bridge \verb#br-vmonly# getagged mit der VLAN-ID 1234 über \verb#br-guest# versandt werden sollen werden folgende Konfigurationsschritte durchgeführt:\setupVerbatimOut
 \begin{verbatim}
 ovs-vsctl del-br br-vmonly
 ovs-vsctl add-br br-vmonly br-guest 1234
@@ -638,8 +748,9 @@ ifconfig br-vmonly up
 \end{verbatim}
 Beide VMs wurden nun auf unterschiedlichen Hosts gestartet, allerdings war noch keine Kon\-nek\-tiv\-ität über \verb#br-vmonly# vorhanden.
 \\
-$\Rightarrow$ Es muss noch das entsprechende VLAN mit ID 1234 auf dem CISCO Switch eingerichtet werden.
+$\Rightarrow$ Es muss noch das entsprechende VLAN mit ID 1234 auf dem CISCO Switch eingerichtet werden.\\
 
+Da die grundeinstellung des Switches nur ein Default VLAN ohne Tags (Ethernet-Rahmen ohne 802.1Q) auf allen Ports kennt, konfigurieren wir nun das VLAN 1234 und ändern die Konfiguration der Ports an denen Hostsysteme hängen, sodass auf diesen getaggete Rahmen dieses VLANs ausgegeben und weitergeleitet werden:
 \setupVerbatimOut
 \begin{verbatim}
 switch4cd502# conf t
@@ -778,8 +889,6 @@ drbdadm -- --overwrite-data-of-peer primary all
 \end{verbatim}
 In \verb#/proc/drbd# kann man den Fortschritt der Synchronisation beobachten:
 
-
-\todo{highlight}
 \setupVerbatimOut
 \begin{verbatim}
 version: 8.3.11 (api:88/proto:86-96)
@@ -787,8 +896,8 @@ srcversion: 41C52C8CD882E47FB5AF767
 
  1: cs:SyncSource ro:Secondary/Secondary ds:UpToDate/Inconsistent C r-----
     ns:747264 nr:0 dw:0 dr:755456 al:0 bm:44 lo:2 pe:158 ua:128 ap:0 ep:1 wo:f oos:5452576
-        [=>..................] sync'ed: 12.0\% (5324/6044)Mfinish: 0:00:59 speed: 92,144 (92,144) K/sec
- 2: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+        [=>..................] sync'ed: @\bfseries 12.0\%@ (5324/6044)Mfinish: 0:00:59 speed: 92,144 (92,144) K/sec
+ 2: cs:Connected ro:Secondary/Secondary ds:@\bfseries UpToDate/UpToDate@ C r-----
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 Hier sieht man, dass das erste Device noch synchronisiert wird und der Fortschritt bei 12,0\% liegt. Das zweite Device wurde bereits vollständig synchronisiert, was man an \verb#UpToDate/UpToDate# erkennen kann.
@@ -799,9 +908,9 @@ Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe i
 version: 8.3.11 (api:88/proto:86-96)
 srcversion: 41C52C8CD882E47FB5AF767 
 
- 1: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+ 1: cs:Connected ro:Secondary/Secondary ds:@\bfseries UpToDate/UpToDate@ C r-----
     ns:6189728 nr:0 dw:0 dr:6189728 al:0 bm:378 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
- 2: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
+ 2: cs:Connected ro:Secondary/Secondary ds:@\bfseries UpToDate/UpToDate@ C r-----
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 
