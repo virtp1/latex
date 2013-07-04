@@ -184,6 +184,12 @@ Anschließend wurde die Konfiguration, durch einen Neustart geladen. Die Konnekt
 Die grundlegenden Anforderungen an die Infrastruktur des Hostrechners sind damit erfüllt, so dass in dem nächsten Kapitel die erste VM erstellt werden kann.
 
 \chapter{VM}
+Nachdem nun alle notwendigen Vorbereitungen abgeschlossen waren, konnte die erste VM erstellt werden. Dazu wurde das Kommando \verb#xen-create-image# genutzt, welches die Erstellung einer paravirtualisierten VM weitestgehend automatisiert. Es wird zuerst die VM \verb#guest1# mit dem Betriebssystem Debian Wheezy, anschließend dann \verb#guest2# mit Debian Squeezy erstellt.
+\\
+Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wiederum mit Debian Wheezy erstellt. Bei dieser Vollvirtualisierung läuft das Gastbetriebssystem prinzipiell ohne Anpassungen an den Hypervisor. Um IO Operationen zu beschleunigen werden jedoch spezielle Treiber für Netzschnittstellen und Festplatten verwendet. 
+\\
+Die Performanz der verschiedenen Virtualisierungsmethoden bei Netzschnittstellen wird im letzten Abschnitt des Kapitel anhand eines Experimentes untersucht.
+
 
 
 \section{Die erste paravirtualisierte VM}
@@ -327,6 +333,7 @@ Ein nebenbei laufender \verb#tcpdump# zeigte sehr große eingehende Ethernet Fra
 Zusätzlich wurde getestet, ob die Bridges und \verb#vif#-Schnittstellen mit Jumbo-Frames von 9000 Byte Größe umgehen können. Nach Erhöhung der MTU auf der Bridge, den \verb#vif#-Schnttstellen und auf den Schnittstellen des Gastes konnten Jumbo-Frames genutzt werden.
 
 \section{HVM}
+\label{hvm_vm}
 Neben der Paravirtualisierung unterstützt XEN noch Vollvirtualiserung. Hierzu wird von XEN mit Hilfe der Virtualisierungsunterstützung der CPU ein Hypervisor installiert, der die Traps abfängt und die entsprechenden Hypercalls am eigentlichen XEN-Hypervisor aufruft.
 
 Um eine vollvirtualisierte VM zu erstellen, muss die Konfiguration der VM angepasst werden (gekürzte Darstellung):
@@ -357,9 +364,10 @@ Abbildung \ref{megaplot} vergleicht die Netzperformanz verschiedener VMs gemesse
 \end{itemize}
 
 Dieser Test zeigt wie in Abbildung \ref{megaplot} ersichtlich extreme Unterschiede bzgl. der Datenraten. Während die Messung mit HVM\_PV Treibern -- die standardmäßig aktiviert sind -- ebenso wie die PVM hohe Datenraten zeigen, bricht die Datenrate bei der \verb#QEMU#-Emulation extrem ein.
-
+\\
 Den Verzicht auf die HVM\_PV Treiber konfiguriert man mittels des Parameters \verb#xen_platform_pci = 0# in der Konfigurationsdatei der VM.
 
+Die jetzige Konfiguration des Hostsystems \verb#pcvirt01# kann somit VMs erfolgreich ausführen. Damit man nun VMs auf ein weiteres Hostsystem übertragen kann muss auch von diesem der Hintergrundspeicher der jeweiligen VM erreichbar sein. Da dieser in derzeit nur von \verb#pcvirt01# aus erreichbar ist, muss man in einem weiteren Schritt diesen über das Praktikumsnetz freigeben.
 \begin{figure}
 \input{plot1}
 \caption{Vergleich der Netz IO Performanz}
@@ -367,8 +375,12 @@ Den Verzicht auf die HVM\_PV Treiber konfiguriert man mittels des Parameters \ve
 \end{figure}
 \chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
+Damit die VMs nicht fest an einen Host gebunden sind, soll in diesem Kapitel der Hintergrundspeicher der VM \verb#guest1# für weitere Systeme freigegeben werden. Dazu wurde \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} eingesetzt. Für diesen Zweck hätte auch \emph{internet Small Computer System Interface} (iSCSI) \cite{rfc3720} zum Einsatz kommen können, da bereits die andere Gruppe diese Technologie eingesetzt hatte, haben wir uns für AoE entschieden. 
+\\
+Die anschließenden Abschnitte beschreiben die Einrichtung, Konfiguration und Inbetriebnahme von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02#.
+
 \section{Einrichtung Kernelmodul aoe auf pcvirt01 + pcvirt02}
-Vor der Einrichtung von \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} auf den Hosts pcvirt01 und pcvirt02 haben wir in den Konfigurationen der Kernels nachgesehen, ob AoE unterstützt wird. 
+Vor der Einrichtung von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02# haben wir in den Konfigurationen der Kernels nachgesehen, ob AoE unterstützt wird. 
 \setupVerbatimOut
 \begin{verbatim}
 grep ATA_OVER /boot/config-`uname -r`
@@ -516,6 +528,12 @@ xm migrate --live guest1 192.168.1.131
 Die Migration verläuft erfolgreich. Ein parallel laufender Versuch mit \verb|ping -i 0.1| \verb| -w 0.1 <VM-IP>| hat keine Paketverluste angezeigt, was bedeutet, dass die VM weniger als 100ms im Netz unerreichbar war. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit laufenden Services teilweise ebenfalls Ausfallzeiten geringer 100ms gemessen wurden. Ein Gratuitous
 ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert wird in Abschnitt \ref{Gratuitous} nachgewiesen.
 
+
+\begin{figure}
+\input{plot2}
+\caption{Übertragung von UDP Paketen von VM zum Host während Migration}
+\label{migration_plot}
+\end{figure}
 
 \section{Beobachtungen der Migration mit tshark} \label{mig_tcpdump}
 Um ein weiteres Verständnis der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
