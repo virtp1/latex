@@ -292,7 +292,7 @@ vif         = [
              ]
 \end{verbatim}
 Auf \verb#guest1# geschah das Hinzufügen des 2. Interfaces analog.\\
-Anschließend wurden die VMs gestartet und die Datentransferrate zwischen den VMs mittels \verb#iperf# bestimmt. Die gemessenen Übertragungsraten in der Größenordnung von 8 Gbits/s und sind damit deutlich höher als bei Vergleichsmessungen zwischen einer VM und einem anderen physischen System.
+Anschließend wurden die VMs gestartet und die Datentransferrate zwischen den VMs mittels \verb#iperf# bestimmt. Die gemessenen Übertragungsraten in der Größenordnung von 8 $\frac{Gbit}{s}$ und sind damit deutlich höher als bei Vergleichsmessungen zwischen einer VM und einem anderen physischen System.
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -398,7 +398,7 @@ vbladed 0 2 br-guest /dev/storage/guest1-swap
 \end{verbatim}
 Damit die Devices nach einem Neustart wieder freigegeben werden, kommen die zwei letzten Befehle auch in \verb#/etc/rc.local#. 
 \section{Einrichtung des Clients}
-Da \verb#pcvirt02# noch nicht konfiguriert war, wurde dieser analog zu \verb#pcvirt01#  -- soweit nötig -- eingerichtet. Auf das Distributionsupgrade auf Wheezy und Open vSwitch wurde vorerst verzichtet; in Abschnitt \ref{ovs2} wird dies nötig und nachgeholt.
+Da Gruppe 2 aus dem Praktium ausgestiegen ist und daher \verb#pcvirt02# noch nicht konfiguriert war, wurde dieser analog zu \verb#pcvirt01#  -- soweit nötig -- eingerichtet. Auf das Distributionsupgrade auf Wheezy und Open vSwitch wurde vorerst verzichtet; in Abschnitt \ref{ovs2} wird dies nötig und nachgeholt.
 \setupVerbatim{bash}
 \begin{verbatim}
 brctl addbr br-guest
@@ -537,15 +537,15 @@ Ein Gratuitous ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert,
 \end{figure}
 
 \section{Beobachtungen der Migration mit tshark} \label{mig_tcpdump}
-Um ein weiteres Verständnis der Migration zu erhalten haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
+Um ein weiteres Verständnis der Migration zu erhalten, haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
 
 \subsection{Erfolgreiche Migration von Xen 4.0 auf 4.1}
-Es wird eine TCP Verbindung zwischen beiden Hosts aufgebaut und darüber ein sehr einfaches Protokoll genutzt. Dabei meldet sich \verb#pcvirt02# mit einem \verb|(receive)| bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# den \emph{LinuxGuestRecord} mit sämtlichen Settings und States der VM den \verb#pcvirt01#. Anschliesend findet eine Übertragung der RAM Inhalte der VM \verb#guest1# von \verb#pcvirt02#  an \verb#pcvirt01# statt. Den erfolgreichen Empfang quittiert \verb#pcvirt02# mit einem \verb|(ok)|.
+Es wird eine TCP-Verbindung von \verb#pcvirt02#, wo die VM derzeit läuft, nach \verb#pcvirt01# aufgebaut und darüber ein sehr einfaches Protokoll genutzt. Dabei meldet sich \verb#pcvirt02# mit einem \verb|(receive)| bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# den \emph{LinuxGuestRecord} mit sämtlichen Einstellungen und Zuständen der VM an \verb#pcvirt01#. Anschließend findet eine Übertragung der RAM-Inhalte der VM \verb#guest1# von \verb#pcvirt02#  an \verb#pcvirt01# statt. Den erfolgreichen Empfang quittiert \verb#pcvirt01# mit einem \verb|(ok)|.
 
 Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen den Hosts:
 \setupVerbatimOut
 \begin{verbatim}
-# Von >=pcvirt02 nach <=pcvirt01
+# Von pcvirt02=> nach <=pcvirt01
 
 > (receive)
 < (ready receive)
@@ -555,8 +555,7 @@ Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen d
 <(ok)
 \end{verbatim}
 \label{xen_bullshit}
-Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} und vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für das Aktzeptieren der Migration oder eine Ablehnung an dieser Stelle vorzusehen, obwohl \cite{clark2005live} sowohl in den Stages Reservation und Stop-and-Copy vorsieht, dass Xen Migrationen in solchen Fällen abgebrochen werden können: ``Failure to secure resources here means that the VM simply continues to run on A unaffected.''\footnote{Fehler bei der Ressourcenreservierung zu diesem Zeitpunkt bedeuten, dass die VM einfach auf A unangetastet weiterläuft.}\cite{clark2005live} und ``The copy at A is still con-
-sidered to be primary and is resumed in case of failure.''\footnote{Die Kopie auf A wird weiterhin als das Primärsystem angesehen und im Fehlerfall dort wieder gestartet.}\cite{clark2005live}
+Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} und vor der Übertragung der Laufzeitdaten keinerlei Rückkommunikation durch den empfangenden Host stattfindet. Das Protokoll scheint keine Möglichkeit für eine Ablehnung der Migration an dieser Stelle vorzusehen, obwohl \cite{clark2005live} sowohl in den Stages Reservation und Stop-and-Copy vorsieht, dass Xen Migrationen in solchen Fällen abgebrochen werden können: ``Failure to secure resources here means that the VM simply continues to run on A unaffected.''\footnote{Fehler bei der Ressourcenreservierung zu diesem Zeitpunkt bedeuten, dass die VM einfach auf A unangetastet weiterläuft.}\cite{clark2005live} und ``The copy at A is still considered to be primary and is resumed in case of failure.''\footnote{Die Kopie auf A wird weiterhin als das Primärsystem angesehen und im Fehlerfall dort wieder gestartet.}\cite{clark2005live}
 
 
 \subsection{Fehlerhafte Migration von Xen 4.1 auf 4.0}
@@ -566,30 +565,31 @@ Bei der fehlgeschlagenen Migration läuft die Kommunikation wie im vorherigen Ab
 <(err (type "<class 'xen.xend.XendError.XendError'>") (value '/usr/lib/xen-4.0/bin/xc_restore 24 10 1 2 0 0 0 0 failed'))
 \end{verbatim}
 
-Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird, ist uns auch Aufgrund der Arbeit von \cite{clark2005live}, wo dies für Xen beschrieben wird (vgl. Abschnitt \ref{xen_bullshit}), nicht ersichtlich. 
-So findet nämlich leider eine Migration der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht. Hier bleibt zu hoffen, dass dieses Verhalten durch den inzwischen als obsolet eingestuften \verb#xend# verursacht wird und in den designierten Nachfolgern für das Management -- \verb#xl# und \verb#XAPI# -- diese Fehler nicht weiterhin bestehen. Eine weitere Überprüfung dieses Sachverhalts hätte den Rahmen des Praktikums gesprengt.
+Dies zeigt, dass nach einer fehlgeschlagenen Migration dies vom empfangenden System gemeldet wird. Warum dies nicht durch den sendenden Host registriert wird und dort die Maschine trotzdem freigegeben wird, ist uns auch Aufgrund der Arbeit von \cite{clark2005live}, wo dies für Xen beschrieben wird (vgl. Abschnitt \ref{xen_bullshit}), nicht ersichtlich. In diesem Fall findet eine Migration des Zustandes der VM nach \verb#/dev/null# statt. Wenigstens eine Benachrichtigung des Nutzers über die Probleme wäre durchaus angebracht.
+\\
+Hier bleibt zu hoffen, dass dieses Verhalten durch den inzwischen als obsolet eingestuften \verb#xend# verursacht wird und in den designierten Nachfolgern für das Management -- \verb#xl# und \verb#XAPI# -- diese Fehler nicht weiterhin bestehen. Eine weitere Überprüfung dieses Sachverhalts hätte den Rahmen des Praktikums gesprengt.
 
-\subsection{Gratuitous ARP der VM IP/Mac}\label{Gratuitous}
+\subsection{Gratuitous ARP}
+\label{Gratuitous}
 
-Nach einer erfolgreichen Migration muss, damit die MAC Tabellen der beteiligten Switches/Bridges aktuell sind, Xen noch im Namen der VM einen sog. Gratuitous ARP Request vom Migrations-Ziel absenden dieser sieht so aus:
+Damit die MAC Tabellen der beteiligten Switches/Bridges nach einer erfolgreichen Migration aktuell sind, muss Xen noch im Namen der VM einen sog. Gratuitous ARP Request vom Migrationsziel absenden. Dieser kann mit \verb#tshark# so beobachtet werden:
 
 \setupVerbatimOut
 \begin{verbatim}
 151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
 \end{verbatim}
 
-Nachden nun VMs zwischen den Hosts migriert werden können besteht nun das Problem, dass die Bridge \verb#br-vmonly# auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird, so dass VMs die dieses Netz nutzen wollen, sich aktuell nicht erreichen können. Dieses Manko wird im Folgenden Abschnitt durch VLAN Trunking behoben.
+Nachden nun VMs zwischen den Hosts migriert werden können, besteht nun das Problem, dass die Bridge \verb#br-vmonly# auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird. VMs, die dieses Netz nutzen wollen und sich auf verschiedenen Hosts befinden, können sich aktuell nicht erreichen. Dieser Umstand wird im folgenden Abschnitt durch VLAN-Trunking behoben.
 
-\chapter{VLAN für br-vmonly zwischen zwei Hosts}
+\chapter{VLAN-Trunking zwischen den Hosts}
 \label{vlan_trunk}
-Damit zwei VMs \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss der Datenverkehr in dieser virtuellen Netzes in einem VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen hierfür die VLAN ID 1234.
+Damit zwei VMs, z.B. \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide auf derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss der Datenverkehr dieses virtuellen Netzes durch ein VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen hierfür die VLAN ID 1234.
 
-\section {Vorarbeiten auf auf dem zweiten Hostsystem}\label{ovs2}
-Da Gruppe 2 aus dem Praktium ausgestiegen ist, können wir den Host für unsere Zwecke nutzen. Zuerst wird wie in Kapitel \ref{chap:whezzy_ugprade} der Host auf wheezy upgegraded.
-Anschließend muss auf pcvirt02 auch das Open vSwitch installiert werden (vgl. Kapitel~\ref{chap:ovs}), die klassiche Bridge entfernt werden und die genutzten Bridges neu erstellt werden:
+\section {Vorarbeiten auf  \texttt{pcvirt02}}\label{ovs2}
+Nun wird auch auf \verb#pcvirt02#, wie in Kapitel \ref{chap:whezzy_ugprade}, ein Distributionsupgrade auf Wheezy durchgeführt. Anschließend muss auf \verb#pcvirt02#  auch der Open vSwitch installiert (vgl. Kapitel~\ref{chap:ovs}), die klassiche Bridge entfernt und die genutzten Bridges neu erstellt werden:
 \setupVerbatim{bash}
 \begin{verbatim}
-apt-get instal openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
+apt-get install openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
 modprobe openvswitch-mod
 rmmod bridge
 ovs-vsctl add-br br-guest
@@ -599,7 +599,7 @@ ifconfig eth0 up
 ifconfig br-guest
 \end{verbatim}
 
-\verb#/etc/network/interfaces# wurde ebenfalls angepasst:
+Die Konfigurationsdatei \verb#/etc/network/interfaces# wurde ebenfalls angepasst:
 \setupVerbatimOut
 \begin{verbatim}
 auto lo eth1
@@ -620,9 +620,9 @@ iface br-vmonly inet manual
 	up ifconfig $IFACE up 
 \end{verbatim}
 
-\section{VLAN br-vmonly über Switch}
+\section{VLAN über Switch}
 Nun wird die Bridge \verb#br-vmonly# auf beiden Hostsystemen so umgebaut, dass alle Pakete für sie über \verb#br-guest# mit dem VLAN Tag 1234 laufen.
-
+\todo{Ausführlicher Beschreiben}
 \setupVerbatimOut
 \begin{verbatim}
 ovs-vsctl del-br br-vmonly
@@ -631,11 +631,10 @@ ifconfig br-vmonly up
 \end{verbatim}
 Beide VMs wurden nun auf unterschiedlichen Hosts gestartet, allerdings war noch keine Kon\-nek\-tiv\-ität über \verb#br-vmonly# vorhanden.
 \\
-$\Rightarrow$ Es muss das entsprechende VLAN mit ID 1234 noch auf dem CISCO Switch eingerichtet werden.
+$\Rightarrow$ Es muss noch das entsprechende VLAN mit ID 1234 auf dem CISCO Switch eingerichtet werden.
 
 \setupVerbatimOut
 \begin{verbatim}
-# In Configure Modus gehen
 switch4cd502# conf t
 # Vlan 1234 erstellen
 switch4cd502(config)# vlan database 
@@ -656,13 +655,15 @@ switch4cd502(config)# exit
 switch4cd502# write memory
 \end{verbatim}
 
-Nun ist eine Konnektivität über \verb#br-vmonly# auch Hostübergreifend möglich.
+Nun ist eine Konnektivität über \verb#br-vmonly# auch hostübergreifend möglich, wie auch ein Versuch mit \verb#ping# bestätigt.
 
-\chapter{DRBD Blockdevicesync}
+\chapter{Distributed Replicated Block Device}
 
-Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host übers Netz zu Verfügung gestellt werden, wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Aus diesem Grund wird nun das Swap und Root - Blockdevice einer neuen VM \verb#guest3# mittels \emph{Distributed Replicated Block Device} (DRBD) zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Somit könnte in oben beschriebenen Fall \verb#pcvirt01# neugestartet werden, ohne dass ein Ausfall von \verb#guest3# drohen würde.
+Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht.
+\\
+Aus diesem Grund wird nun das Root- und Swap-Blockdevice einer neuen VM \verb#guest3# mittels \emph{Distributed Replicated Block Device} (DRBD) zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Somit könnte in oben beschriebenem Fall \verb#pcvirt01# ausgeschaltet werden, ohne dass ein Ausfall von \verb#guest3# verursacht würde.
 
-\section{DRBD Installieren/Konfiguieren}
+\section{DRBD installieren/konfiguieren}
 Die Konfiguration in diesem Abschnitt wird auf beiden Hosts (\verb#pcvirt01# und \verb#pcvirt02#) durchgeführt: 
 \\
 Installation von \emph{DRBD} mittels: 
@@ -671,16 +672,15 @@ Installation von \emph{DRBD} mittels:
 apt-get install drbd8-utils
 \end{verbatim}
 
-Anschließend wird in den globalen Optionen die Sync Geschwindigkeit auf 100Mbit begrenzt:
-\\
-\verb|/etc/drbd.d/global_config.conf|
+Anschließend wird in den globalen Optionen \verb|/etc/drbd.d/global_config.conf| die Synchronisations-Geschwindigkeit auf 100 $\frac{Mbit}{s}$ begrenzt:
+
 \setupVerbatimOut
 \begin{verbatim}
 global { usage-count no; }
 common { syncer { rate 100M; } }
 \end{verbatim}
 
-Konfiguration für Root Device:\verb|/etc/drbd.d/guest1-root.res|
+Die Konfiguration für das Root-Device wird in der Datei \verb|/etc/drbd.d/guest1-root.res| vorgenommen:
 \setupVerbatimOut
 \begin{verbatim}
 resource guest1-root {
@@ -689,7 +689,7 @@ resource guest1-root {
                 allow-two-primaries;
                 cram-hmac-alg sha1;
                 shared-secret "d9a8sdtgejho3";
-                after-sb-0pri discard-younger-primary; #discard-zero-changes;
+                after-sb-0pri discard-younger-primary;
                 after-sb-1pri discard-secondary;
                 after-sb-2pri call-pri-lost-after-sb;
         }
@@ -708,7 +708,7 @@ resource guest1-root {
 }
 \end{verbatim}
 
-Konfiguration für Swap Device: \verb|/etc/drbd.d/guest1-swap.res|
+Analog dazu wird die Konfiguration des Swap-Devices in \verb|/etc/drbd.d/guest1-swap.res| durchgeführt:
 \setupVerbatimOut
 \begin{verbatim}
 resource guest1-swap {
@@ -717,7 +717,7 @@ resource guest1-swap {
                 allow-two-primaries;
                 cram-hmac-alg sha1;
                 shared-secret "d9a8sdtgej124";
-                after-sb-0pri discard-younger-primary; #discard-zero-changes;
+                after-sb-0pri discard-younger-primary;
                 after-sb-1pri discard-secondary;
                 after-sb-2pri call-pri-lost-after-sb;
         }
@@ -737,9 +737,9 @@ resource guest1-swap {
 \end{verbatim}
 
 
-\section{DRBD intialisieren}
+\section{DRBD initialisieren}
 
-Nun wird \emph{DRBD} initialisiert und das erste mal gesynct. Davor muss noch auf \verb#pcvirt02# eine LVM Volume Group eingerichtet werden:
+Nun wird \emph{DRBD} initialisiert und zum ersten mal synchronisiert. Davor muss noch auf \verb#pcvirt02# eine LVM Volume Group \verb#storage# eingerichtet werden. Auf RAID haben wir hier verzichtet:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -763,14 +763,16 @@ drbdadm create-md guest1-root
 \end{verbatim}
 
 
-Nun wird auf einem der Hosts der intiale Sync von den beiden DRBD Devices \verb#/dev/drbd1# und \verb#/dev/drbd2# durchgeführt:
+Nun wird auf einem der Hosts die initiale Synchronisation von allen DRBD Devices durchgeführt:
 
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm -- --overwrite-data-of-peer primary all
 \end{verbatim}
-In \verb#/proc/drbd# kann man den Sync beobachten:
+In \verb#/proc/drbd# kann man den Fortschritt der Synchronisation beobachten:
 
+
+\todo{highlight}
 \setupVerbatimOut
 \begin{verbatim}
 version: 8.3.11 (api:88/proto:86-96)
@@ -782,8 +784,8 @@ srcversion: 41C52C8CD882E47FB5AF767
  2: cs:Connected ro:Secondary/Secondary ds:UpToDate/UpToDate C r-----
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
-Hier sieht man dass Nr. 1 noch synchronisiert wird und der  Forschritt bei 12,0\% liegt und  Nr. 2 bereits vollständig synchronisert wurde, was man an \verb#UpToDate/UpToDate# sieht.
-Wenig später betrachtet ist die Ausgabe wie folgt und die Synchronisation daher abgeschlossen:
+Hier sieht man, dass das erste Device noch synchronisiert wird und der Fortschritt bei 12,0\% liegt. Das zweite Device wurde bereits vollständig synchronisiert, was man an \verb#UpToDate/UpToDate# erkennen kann.
+Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe ist daher wie folgt:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -796,18 +798,22 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 
-Zu guter Letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary State} versetzt werden, nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung:
+Zu guter Letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary State} versetzt werden. Nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung:
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm primary all
 \end{verbatim}
 
-\section{Installation einer VM auf DRBD Devices}
-Nun wird ein neuer Xen-Gastsystem \verb#guest3# auf den DRBD Devices installiert und gestartet:
+\section{VM auf DRBD-Devices}
+Nun wird ein neues Xen-Gastsystem \verb#guest3# auf den gerade eingerichteten DRBD-Devices installiert und draufhin gestartet:
 \setupVerbatimOut
 \begin{verbatim}
 xen-create-image --ip 192.168.1.3 --bridge=br-guest  --swap-dev=/dev/drbd2 --password=123 --image-dev=/dev/drbd1 --hostname=guest3 --vcpus=2 --dist wheezy
 xm create /etc/xen/guest3.cfg
 \end{verbatim}
 
-\verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# verschoben werden, dabei ist nur der Rechner nötig auf dem die VM läuft der andere kann in der Zeit offline gehen, neugestartet oder gewartet werden.
+Die VM \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# verschoben werden, dabei ist nur der Rechner nötig auf dem die VM gerade läuft. Der andere Host kann dank der DRBD-Spiegelung in dieser Zeit offline gehen, neu gestartet oder gewartet werden.
+\todo{Test durchgeführt?!}
+
+
+\todo{Fazit/Schluss}
