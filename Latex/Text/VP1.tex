@@ -295,8 +295,6 @@ Auf \verb#guest1# geschah das Hinzufügen des 2. Interfaces analog.\\
 Anschließend wurden die VMs gestartet und die Datentransferrate zwischen den VMs mittels \verb#iperf# bestimmt. Die gemessenen Übertragungsraten in der Größenordnung von 8 Gbits/s und sind damit deutlich höher als bei Vergleichsmessungen zwischen einer VM und einem anderen physischen System.
 
 \setupVerbatimOut
-
-\todo{Highlight ggf. Bandbreite}
 \begin{verbatim}
 ------------------------------------------------------------
 Client connecting to 192.168.2.2, TCP port 5001
@@ -304,7 +302,7 @@ TCP window size: 23.5 KByte (default)
 ------------------------------------------------------------
 [  3] local 192.168.2.1 port 57804 connected with 192.168.2.2 port 5001
 [ ID] Interval       Transfer     Bandwidth
-[  3]  0.0-10.0 sec  9.21 GBytes  7.91 Gbits/sec
+[  3]  0.0-10.0 sec  9.21 GBytes  @\bfseries 7.91@ @\bfseries Gbits/sec@
 
 
 ------------------------------------------------------------
@@ -313,26 +311,22 @@ TCP window size: 23.5 KByte (default)
 ------------------------------------------------------------
 [  3] local 192.168.1.1 port 56132 connected with 192.168.1.2 port 5001
 [ ID] Interval       Transfer     Bandwidth
-[  3]  0.0-10.0 sec  10.6 GBytes  9.12 Gbits/sec
+[  3]  0.0-10.0 sec  10.6 GBytes  @\bfseries 9.12@ @\bfseries Gbits/sec@
 \end{verbatim}
-Ein nebenbei laufender \verb#tcpdump# zeigte sehr große eingehende Ethernet-Frames mit Größen bis zu 65226 Byte, während Ping-Pakete, welche die MTU der \verb#vif#-Schnittstellen oder Bridges überschritten fragmentiert -- oder bei gesetztem \verb#DF#-Flag abgewiesen -- wurden.\\
-Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Bei dieser Technik übernimmt die Schnittstelle die Segmentierung der TCP-Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP-Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schnittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben.
+Ein nebenbei laufender \verb#tcpdump# auf dem empfangenden System zeigte sehr große eingehende Ethernet-Frames mit Größen bis zu 65226 Byte: 
 \setupVerbatimOut
-\todo{highlight ggf. die packet größen, df, incorrect}
 \begin{verbatim}
-17:45:48.414535 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25535, offset 0, flags [DF], proto TCP (6), length 65212)
-    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14811337:14876497, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
-17:45:48.414540 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25580, offset 0, flags [DF], proto TCP (6), length 65212)
-    192.168.1.2.57025 > 192.168.1.1.5001: Flags [P.], seq 14876497:14941657, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
-17:45:48.414542 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), length 65226: (tos 0x0, ttl 64, id 25625, offset 0, flags [DF], proto TCP (6), length 65212)
-    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14941657:15006817, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], length 65160
+17:45:48.414535 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), @\bfseries length@ @\bfseries 65226@: (tos 0x0, ttl 64, id 25535, offset 0, flags [DF], proto TCP (6), @\bfseries length@ @\bfseries 65212@)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14811337:14876497, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], @\bfseries length@ @\bfseries 65160@
+17:45:48.414540 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), @\bfseries length@ @\bfseries 65226@: (tos 0x0, ttl 64, id 25580, offset 0, flags [DF], proto TCP (6), @\bfseries length@ @\bfseries 65212@)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [P.], seq 14876497:14941657, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], @\bfseries length@ @\bfseries 65160@
+17:45:48.414542 00:16:3e:32:d0:3e > 00:16:3e:95:de:ad, ethertype IPv4 (0x0800), @\bfseries length@ @\bfseries 65226@: (tos 0x0, ttl 64, id 25625, offset 0, flags [DF], proto TCP (6), @\bfseries length@ @\bfseries 65212@)
+    192.168.1.2.57025 > 192.168.1.1.5001: Flags [.], seq 14941657:15006817, ack 0, win 913, options [nop,nop,TS val 396548 ecr 356977], @\bfseries length@ @\bfseries 65160@
 17:45:48.414559 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54265, offset 0, flags [DF], proto TCP (6), length 52)
-    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x86f4), seq 0, ack 14876497, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
-17:45:48.414571 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54266, offset 0, flags [DF], proto TCP (6), length 52)
-    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x886b), seq 0, ack 14941657, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
-17:45:48.414576 00:16:3e:95:de:ad > 00:16:3e:32:d0:3e, ethertype IPv4 (0x0800), length 66: (tos 0x0, ttl 64, id 54267, offset 0, flags [DF], proto TCP (6), length 52)^C
-    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (incorrect -> 0x91f8), seq 0, ack 15006817, win 14327, options [nop,nop,TS val 356977 ecr 396548], length 0
+    192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (@\bfseries incorrect@ -> 0x86f4), seq 0, ack 14876497, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
 \end{verbatim}
+Wohingegen Ping-Pakete, welche die MTU der \verb#vif#-Schnittstellen oder Bridges überschritten fragmentiert -- oder bei gesetztem \verb#DF#-Flag abgewiesen -- wurden.
+Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Bei dieser Technik übernimmt die Schnittstelle die Segmentierung der TCP-Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP-Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schnittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben. Die \verb#cksum# \verb#incorrect# Meldung entsteht ebenso durch eine Offloadingtechni. Hierbei werden die Ethernet-Checksummen von der Schnittstelle und nicht dem OS gesetzt. 
 Zusätzlich wurde getestet, ob die Bridges und \verb#vif#-Schnittstellen mit Jumbo-Frames von 9000 Byte Größe umgehen können. Nach Erhöhung der MTU auf der Bridge, den \verb#vif#-Schnittstellen und auf den Schnittstellen des Gastes konnten Jumbo-Frames genutzt werden.
 
 \section{Hardware Virtual Machine}
@@ -464,13 +458,12 @@ disk        = [
 
 Die neue Konfiguration wurde durch Ausführen der Kommandos \verb#xm destroy# und anschließendem \verb#xm# \verb#create# auf \verb#pcvirt01# getestet. Da \verb#pcvirt01# selbst das AoE-Target ist, wird hier AoE noch nicht genutzt (vgl. Abschnitt \ref{dirtysym}).
 Aus diesem Grund wird die VM nun abermals auf \verb#pcvirt01# beendet, ihre Konfigurationsdatei auf das entfernte System \verb#pcvirt02# kopiert, und die VM dort ausgeführt. Mittels \verb#tshark# \verb#-R aoe# können nun AoE-PDUs -- z.B. Schreib- und Lesezugriffe -- beobachtet werden (Ausgabe um Daten verkürzt dargestellt):
-\todo{highlight request/response read/write}
 \setupVerbatimOut
 \begin{verbatim}
- 79.600230 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command Response ATA:Read ext
- 79.600390 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command Response ATA:Read ext
- 84.569842 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command Request ATA:Write ext
- 84.569850 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command Request ATA:Write ext
+ 79.600230 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command @\bfseries Response@ @\bfseries ATA:Read@ ext
+ 79.600390 FujitsuT_e2:6e:58 -> FujitsuT_e2:6e:4a AoE 1060 Issue ATA Command @\bfseries Response@ @\bfseries ATA:Read@ ext
+ 84.569842 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command @\bfseries Request@ @\bfseries ATA:Write@ ext
+ 84.569850 FujitsuT_e2:6e:4a -> FujitsuT_e2:6e:58 AoE 1060 Issue ATA Command @\bfseries Request@ @\bfseries ATA:Write@ ext
 \end{verbatim}
 
 Hiermit ist die Konfiguration von AoE abgeschlossen und die Blockdevices von \verb#guest1# auch von \verb#pcvirt02# erreichbar. Dies sollte nun durch den gemeinsamen Datenspeicher Live-Migrationen zwischen den beiden Hostsystemen ermöglichen.

@@ -58,6 +58,8 @@
 \usepackage{pgfplots}
 \usepgfplotslibrary{units}
 
+\usepackage{alltt}
+
 %\usepackage{tabularx} % für Tabellen automagischer Feldbreiten berechnung
 %\usepackage{multirow} % für Tabellenfelder, die sich über mehrere Zeilen erstrecken
 %\usepackage{subfigure} % um mehrere Abbildungen in einer figure-Umgebung zu strukturieren
@@ -276,23 +278,24 @@
   \newcommand{\internalDirtyHackToGetLabel}{}%
   \newcommand{\setupVerbatim}[1]{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{language=#1,frame=,basicstyle=,caption={[]}}%
+    \lstset{language=#1,frame=,basicstyle=,caption={[]},escapechar=}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \newcommand{\setupVerbatimBash}{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{language=bash,frame=,basicstyle=, caption={[]}}%
+    \lstset{language=bash,frame=,basicstyle=, caption={[]},escapechar=}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \newcommand{\setupVerbatimOut}{%
     \renewcommand{\internalDirtyHackToGetCaption}{X}%
-    \lstset{language=,frame=,basicstyle=, caption={[]}}%
+    \lstset{language=,frame=,basicstyle=, caption={[]},escapechar=@}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
+  
   \newcommand{\setupVerbatimCaption}[3]{%
     \renewcommand{\internalDirtyHackToGetCaption}{#2}%
     \renewcommand{\internalDirtyHackToGetLabel}{#3}%
-    \lstset{language=#1,basicstyle=,captionpos=t,frame=tb}%
+    \lstset{language=#1,basicstyle=,captionpos=t,frame=tb,escapechar=}%
     \gdef\wasVerbatimSetupGiven{}%
   }%
   \lstnewenvironment{verbatim}[1][]{%
