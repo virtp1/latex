@@ -773,35 +773,34 @@ switch4cd502(config)# exit
 switch4cd502# write memory
 \end{verbatim}
 
-Nun ist eine Konnektivität über \verb#br-vmonly# auch hostübergreifend möglich, wie auch ein Versuch mit \verb#ping# bestätigt.
+Nun ist eine Konnektivität über \verb#br-vmonly# auch hostübergreifend möglich, wie auch ein Versuch mit \verb#ping# bestätigt. 
 
 \chapter{Distributed Replicated Block Device}
 
-Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht.
+Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Um in diesem Fall die VM weiter betreiben zu können ist es nötig, dass der Hintergrundspeicher auf beiden Hosts lokal zur Verfügung steht. Dazu muss jedoch der Inhalt diesen zwischen beiden Rechnern synchron gehalten werden. Die Technik \emph{Distributed Replicated Block Device} (DRBD) stellt solche Funktionalität zur Verfügung. 
 \\
-Aus diesem Grund wird nun das Root- und Swap-Blockdevice einer neuen VM \verb#guest3# mittels \emph{Distributed Replicated Block Device} (DRBD) zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Somit könnte in oben beschriebenem Fall \verb#pcvirt01# ausgeschaltet werden, ohne dass ein Ausfall von \verb#guest3# verursacht würde.
+Mit DRBD wird nun das Root- und Swap-Blockdevice einer neuen VM \verb#guest3# zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Die VM ist somit auf beiden Hosts lauffähig und der jeweilige andere Host wird nicht zwingend benötigt und kann somit z.B. für Wartungsarbeiten heruntergefahren werden können. 
 
-\section{DRBD installieren/konfiguieren}
-Die Konfiguration in diesem Abschnitt wird auf beiden Hosts (\verb#pcvirt01# und \verb#pcvirt02#) durchgeführt: 
-\\
-Installation von \emph{DRBD} mittels: 
+Somit könnte in oben beschriebenem Fall \verb#pcvirt01# ausgeschaltet werden, ohne dass ein Ausfall von \verb#guest3# verursacht würde. In den folgenden Abschnitten wird erklärt, wie diese DRBD-Blockdevices eingerichtet wurden.
+
+\section{DRBD installieren/konfigurieren}
+Alle Schritte dieses Abschnittes wurden jeweils auf \verb#pcvirt01# und \verb#pcvirt02# durchgeführt. Dazu wurde zu Beginn DRBD mittels \verb#apt-get#-Aufruf installiert:
 \setupVerbatimOut
 \begin{verbatim}
 apt-get install drbd8-utils
 \end{verbatim}
 
-Anschließend wird in den globalen Optionen \verb|/etc/drbd.d/global_config.conf| die Synchronisations-Geschwindigkeit auf 100 $\frac{Mbit}{s}$ begrenzt:
-
+Anschließend wurde in den globalen Optionen \verb|/etc/drbd.d/global_config.conf| die Synchronisations-Geschwindigkeit auf 100 $\frac{Mbit}{s}$ begrenzt:
 \setupVerbatimOut
 \begin{verbatim}
 global { usage-count no; }
 common { syncer { rate 100M; } }
 \end{verbatim}
 
-Die Konfiguration für das Root-Device wird in der Datei \verb|/etc/drbd.d/guest1-root.res| vorgenommen:
+Die Konfiguration für das Root-Device wurde in der Datei \verb|/etc/drbd.d/guest3-root.res| vorgenommen:
 \setupVerbatimOut
 \begin{verbatim}
-resource guest1-root {
+resource guest3-root {
         protocol C;
         net {
                 allow-two-primaries;
@@ -813,23 +812,23 @@ resource guest1-root {
         }
         on pcvirt01 {
                 device /dev/drbd1;
-                disk /dev/storage/drbd-guest1-root;
+                disk /dev/storage/drbd-guest3-root;
                 address 192.168.1.131:7789;
                 meta-disk internal;
         }
         on pcvirt02 {
                 device /dev/drbd1;
-                disk /dev/storage/drbd-guest1-root;
+                disk /dev/storage/drbd-guest3-root;
                 address 192.168.1.132:7789;
                 meta-disk internal;
         }
 }
 \end{verbatim}
 
-Analog dazu wird die Konfiguration des Swap-Devices in \verb|/etc/drbd.d/guest1-swap.res| durchgeführt:
+Analog dazu wurde die Konfiguration des Swap-Devices in \verb|/etc/drbd.d/guest3-swap.res| durchgeführt:
 \setupVerbatimOut
 \begin{verbatim}
-resource guest1-swap {
+resource guest3-swap {
         protocol C;
         net {
                 allow-two-primaries;
@@ -841,13 +840,13 @@ resource guest1-swap {
         }
         on pcvirt01 {
                 device /dev/drbd2;
-                disk /dev/storage/drbd-guest1-swap;
+                disk /dev/storage/drbd-guest3-swap;
                 address 192.168.1.131:7790;
                 meta-disk internal;
         }
         on pcvirt02 {
                 device /dev/drbd2;
-                disk /dev/storage/drbd-guest1-swap;
+                disk /dev/storage/drbd-guest3-swap;
                 address 192.168.1.132:7790;
                 meta-disk internal;
         }
@@ -856,39 +855,33 @@ resource guest1-swap {
 
 
 \section{DRBD initialisieren}
-
-Nun wird \emph{DRBD} initialisiert und zum ersten mal synchronisiert. Davor muss noch auf \verb#pcvirt02# eine LVM Volume Group \verb#storage# eingerichtet werden. Auf RAID haben wir hier verzichtet:
-
+Um die obigen Konfiguration aktivieren zu können, musste auf \verb#pcvirt02# eine LVM Volume Group \verb#storage# eingerichtet werden. Auf RAID haben wir hier bewusst verzichtet, da die entsprechenden Daten sobald DRBD eingerichtet ist übers Netz auf \verb#pcvirt01# gespiegelt werden. Dazu war das folgenden Kommando nötig:
 \setupVerbatimOut
 \begin{verbatim}
 vgcreate storage /dev/sdb1 
 \end{verbatim}
 
-Anschließend auf beiden Hosts die \emph{Backend-Devices} für DRBD erstellen:
+Drauf hin konnten auf beiden Hosts die \emph{Backend-Devices} für DRBD erstellt werden:
 \setupVerbatimOut
 \begin{verbatim}
-lvcreate -L6G -n drbd-guest1-root storage
-lvcreate -L256M -n drbd-guest1-swap storage
+lvcreate -L6G -n drbd-guest3-root storage
+lvcreate -L256M -n drbd-guest3-swap storage
 \end{verbatim}
 
-Starte DRBD und formatiere die Backend-Devices (auf beiden Hosts):
-
+Anschließend wurde mit \texttt{service drbd restart} der DRBD Dienst aktiviert. Dannach wurden auf beiden Hosts die Backend-Blockdevices mit den DRBD Metadaten formatiert:
 \setupVerbatimOut
 \begin{verbatim}
-service drbdrstart
-drbdadm create-md guest1-swap
-drbdadm create-md guest1-root
+drbdadm create-md guest3-swap
+drbdadm create-md guest3-root
 \end{verbatim}
 
-
-Nun wird auf einem der Hosts die initiale Synchronisation von allen DRBD Devices durchgeführt:
+Als letzter Schritt der DRBD-Einrichtung wurde nun auf einem der beiden Hosts die initiale Synchronisation von den beiden DRBD-Blockdevices durchgeführt:
 
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm -- --overwrite-data-of-peer primary all
 \end{verbatim}
-In \verb#/proc/drbd# kann man den Fortschritt der Synchronisation beobachten:
-
+In \verb#/proc/drbd# konnte man den Fortschritt der Synchronisation beobachten:
 \setupVerbatimOut
 \begin{verbatim}
 version: 8.3.11 (api:88/proto:86-96)
@@ -901,7 +894,7 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 Hier sieht man, dass das erste Device noch synchronisiert wird und der Fortschritt bei 12,0\% liegt. Das zweite Device wurde bereits vollständig synchronisiert, was man an \verb#UpToDate/UpToDate# erkennen kann.
-Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe ist daher wie folgt:
+Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe war daher wie folgt:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -914,23 +907,23 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 
-Zu guter Letzt müssen auf beiden Hosts noch die Devices in den \emph{Primary State} versetzt werden. Nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung:
+Um auf die DRBD-Blockdevices zugreifen zu können, mussten diese noch in den \emph{Primary State} versetzt werden, da nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung stehen:
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm primary all
 \end{verbatim}
 
 \section{VM auf DRBD-Devices}
-Nun wird ein neues Xen-Gastsystem \verb#guest3# auf den gerade eingerichteten DRBD-Devices installiert und draufhin gestartet:
+Dann wurde ein neues Xen-Gastsystem \verb#guest3# auf den gerade eingerichteten DRBD-Devices installiert und draufhin gestartet:
 \setupVerbatimOut
 \begin{verbatim}
 xen-create-image --ip 192.168.1.3 --bridge=br-guest  --swap-dev=/dev/drbd2 --password=123 --image-dev=/dev/drbd1 --hostname=guest3 --vcpus=2 --dist wheezy
 xm create /etc/xen/guest3.cfg
 \end{verbatim}
 
-Die VM \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# verschoben werden, dabei ist nur der Rechner nötig auf dem die VM gerade läuft. Der andere Host kann dank der DRBD-Spiegelung in dieser Zeit offline gehen, neu gestartet oder gewartet werden.
-\todo{Test durchgeführt?!}
-
+Die VM \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# verschoben werden, dabei ist nur der Rechner nötig auf dem die VM gerade läuft. Der andere Host kann dank der DRBD-Spiegelung in dieser Zeit offline gehen, neu gestartet oder gewartet werden. Durch Beenden des DRBD-Dienstes auf \verb#pcvirt01#, während \verb#pc-virt02# die VM \verb#guest3# ausführte, wurde dies auch getestet. Die VM lief ohne Einschränkungen weiter und sobald der DRBD-Dienst wieder gestartet wurde, wurden die Blockdevices erneut synchronisiert.
+\\
+Mit DRBD lässt sich wie zuvor gezeigt, die Verfügbarkeit von Hintergrundspeicher in einem Cluster aus mehreren Hostsystemen erhöhen, da diese Daten auf mehreren Hosts abgespeichert sind.
 
 \todo{Fazit/Schluss}
 % ovs gemeisame konfig koppel / tabellen
