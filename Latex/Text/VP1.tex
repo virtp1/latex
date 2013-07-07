@@ -1,24 +1,15 @@
-%allgemeine todos
-\todo{drbd ausformulieren -> christian}
-\todo{einleitung -> sebastian}
-\todo{fazit -> sebastian}
-\todo{higlights + todos -> michael}
-
-
 \chapter{Einleitung}
-\todo{Neuschreiben, Wheezy erwähnen, Zielsetzung}
 
 Primäre Zielsetzung unserer Versuche war es vorerst, \emph{virtualisierte
 Maschinen} (VMs) auf der Praktikumsumgebung zu erstellen, und diese
 zwischen Hostsystemen mittels Live-Migration zu verschieben. Dazu waren viele
-Vorarbeiten und Versuche notwendig. \\
-Nachdem wir schließlich VMs erfolgreich migrieren konnten experimentierten wir mit
+Vorarbeiten und Versuche notwendig. Nachdem wir schließlich VMs erfolgreich migrieren konnten experimentierten wir mit
 weiteren Möglichkeiten der Virtualisierung und verteilten Datenspeichern.
-\\
+
 Die Ausarbeitung behandelt in den Kapiteln \ref{chap:whezzy_ugprade} bis \ref{chap:ovs} die Vorarbeiten
 an der zur Virtualisierung genutzten Infrastruktur, die nötig sind um VMs zu erstellen.
 Dies beginnt in Kapitel \ref{chap:whezzy_ugprade} mit einem Distributionsupgrade des Debiansystems, 
-das zur Virtualisierung dienen soll, um neuere Versionen der genutzten Programme nutzen zu können. Anschließend wird in Kapitel \ref{chap:stor} ein Datenspeicher für die zukünftigen VMs geschaffen. Hierzu dient der \emph{Logical Volume Manager} (LVM) der auf einem darunter liegenden \emph{Redundant Array of Independent Disks} (RAID) aufgesetzt ist. Kapitel \ref{chap:ovs} beschäftigt sich mit der erstellung eines Netzes für die Virtuellen Maschinen mittels \emph{Open vSwitch} (OVS)
+das zur Virtualisierung dienen soll, um neuere Versionen der genutzten Programme nutzen zu können. Anschließend wird in Kapitel \ref{chap:stor} ein Datenspeicher für die zukünftigen VMs geschaffen. Hierzu dient der \emph{Logical Volume Manager} (LVM) der auf einem darunter liegenden \emph{Redundant Array of Independent Disks} (RAID) aufgesetzt ist. Kapitel \ref{chap:ovs} beschäftigt sich mit der erstellung eines Netzes für die Virtuellen Maschinen mittels \emph{Open vSwitch} (OVS).
 
 Ab Kapitel \ref{vms} erstellten wir insgesamt vier VMs mit unterschiedlichen
 Parametern und Einstellungen. Hierbei wurden, die Möglichkeit der rein in Software ablaufenden Paravirtualisierung und der Hardwaregestützten Vollvirtualisierung (Hardware Virtual Maschine -- HVM) betrachtet. Um später Live-Migrationen durchführen zu können ist es notwendig den Hintergrundspeicher der VMs über das Netz zur Verfügung zu stellen. Zu diesem Zweck wird in Kapitel \ref{chap:aoe} \emph{ATA-Over-Ethernet} (AoE) eingerichtet. Daraufhin finden in Kapitel \ref{migr} Versuche zur Live-Migration von VMs statt. Im Darauffolgenden Kapitel \ref{vlan_trunk} wird ein internes Netz auf das nur die VMs zugriff haben Hostübergreifend mit Hilfe des OVS verfügbar gemacht. Den Abschluss der Arbeit bildet in Kapitel \ref{chap:drbd} ein Versuch ein \emph{Distributed Replicated Block Device} (DRBD) aufzubauen, bei dem mehrere Kopien eines Blockdevices Hostübergreifend konsistent gehalten werden, um Ausfallsicherheit zu schaffen.
@@ -937,6 +928,17 @@ Die VM \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# 
 Mit DRBD lässt sich wie zuvor gezeigt, die Verfügbarkeit von Hintergrundspeicher in einem Cluster aus mehreren Hostsystemen erhöhen, da diese Daten auf mehreren Hosts abgespeichert sind.
 
 \todo{Fazit/Schluss}
+Unser Hauptziel, die Live-Migration von virtualisierten Maschinen, haben
+wir nach einigen Versuchen erfolgreich durchführen können. Die hierzu nötigen Fehlversuche und darauffolgenden Analysen haben einen tiefen Einblick in die Migrationsfunktionalität des Managementinterfaces \verb#xend# gewährt.
+Auf dem Gebiet der Storagevirtualisierung konnten vier Techniken RAID, LVM, AoE und DRBD betrachtet und ausprobiert werden. Wobei RAID für Datenredundanz über mehrere Platten innerhalb eines Hostsystems sorgt, LVM dazu dient Logical Volumes die unabhängig von der Größe der physischen Datenspeichern sind, AoE für die Bereitstellung eines Datenspeichers innerhalb eines LAN dient und DRBD sowohl für die Bereitstellung eines Datenspeichers über ein Netz, als auch für die Redundanz des Datenspeichers über mehrere Systeme hinweg dient.
+
+Als weiterführende Versuche die unsere Erkenntnisse vertiefen würden wir die folgenden drei Versuche vorschlagen, die nicht mehr im Rahmen dieses Praktikums betrachtet werden konnten:
+\begin{itemize}
+	\item Beobachtung des Migrationsverhaltens bei den beiden designierten Nachfolgern \verb#xl# und \verb#xapi# für \verb#xend#. Hierbei sollte ein besonderes Augenmerk darauf gerichtet werden, ob hier fehlerhafte Migrationen wie bei \verb#xend# unbehandelt bleiben wodurch der Zustand der VM verloren geht, und ob hier eine Vorherige Signalisierung geschieht, die die Möglichkeit einer Ablehnung der Migration vorsieht.
+	\item Konfiguration des OVS über mehrere Systeme hinweg, so dass dieser als ein die Systeme überspannender Switch mit gemeinsamen Tabellen und gemeinsamer Verwaltung auftritt.
+	\item Bei DRBD wäre eine Betrachtung des Verhaltens inklusive Lasttests und mehrerer Ausfälle interessant. Auch eine Betrachtung wie die Synchronisation genau von statten geht wäre interessant.  
+\end{itemize}
+
 % ovs gemeisame konfig koppel / tabellen
 % drbd lasttests
 % migration mit xapi/xl (desig. nachfolger von xend)
