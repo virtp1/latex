@@ -205,7 +205,7 @@ Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wie
 Die Performanz der verschiedenen Virtualisierungsmethoden bei Netzschnittstellen wird im letzten Abschnitt des Kapitels (Abschnitt \ref{perf}) anhand eines Experimentes untersucht.
 
 \section{Erstellung einer paravirtualisierten VM}
-Um die ersten paravirtualisierten VMs auf dem Host \verb#pcvirt01# zu erzeugen, wurde das Skript \verb#xen-create-image# genutzt. Diesem kann man über diverse Parameter Einstellungen übergeben. Des weiteren übernimmt es die Installation der paravirtualisierten Gastbetriebssysteme für den Nutzer.
+Zur Erzeugung der ersten paravirtualisierten VMs auf dem Host \verb#pcvirt01# wurde das Skript \verb#xen-create-# \verb#image# genutzt. Diesem kann man über diverse Parameter Einstellungen zur Konfiguration der VM übergeben \cite{man_xencreateimage}. Des weiteren übernimmt es die Installation der paravirtualisierten Gastbetriebssysteme für den Nutzer.
 \setupVerbatim{bash}
 \begin{verbatim}
 xen-create-image --ip 192.168.10.12  --lvm=storage --hostname=guest1 --vcpus=2 --dist wheezy
@@ -361,7 +361,7 @@ vncpasswd=''
 keymap='de'
 \end{verbatim}
 
-Durch die Konfiguration des Kernels zu \verb#hvmloader# und Nutzung des Builders \verb#hvm# wird eine Vollvirtualisierung angestoßen. Die VNC-Konfiguration ist notwendig, um die grafische Ausgabe der VM sehen zu können. Eine Betriebssysteminstallation kann beispielsweise durch Hinzufügen eines ISO-Images als CDROM-Laufwerk ermöglicht werden: 
+Durch die Konfiguration des Kernels zu \verb#hvmloader# und Nutzung des Builders \verb#hvm# wird eine Vollvirtualisierung angestoßen. Die VNC-Konfiguration ist notwendig, um die grafische Ausgabe der VM sehen zu können. Eine Betriebssysteminstallation kann beispielsweise durch Hinzufügen eines ISO-Images als CDROM-Lauf\-werk ermöglicht werden: 
 \setupVerbatimOut
 \begin{verbatim}
 disk = [ <WEITERE KONFIGURATION> , 'file:/xen/iso/debian-7.0.0-amd64-netinst.iso,hdc:cdrom,r']
@@ -399,7 +399,7 @@ Vor der Einrichtung von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02# ha
 grep ATA_OVER /boot/config-`uname -r`
     CONFIG_ATA_OVER_ETH=m
 \end{verbatim} 
-Die Ausgabe zeigt auf beiden Rechnern die Unterstützung von AoE als Kernelmodul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts mittels \verb#modprobe aoe# geladen und in die Konfigurationsdatei \verb#/etc/modules# eingefügt, damit es beim nächsten Systemstart automatisch geladen wird. 
+Die Ausgabe zeigt auf beiden Rechnern die Unterstützung von AoE als Kernelmodul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts mittels \verb#modprobe aoe# geladen und in die Datei \verb#/etc/modules# eingefügt, damit es beim nächsten Systemstart automatisch geladen wird. 
 
 \section{Einrichtung von vbladed}
 Zum Einrichten eines AoE-Targets mittels \verb#vbladed#, muss das Blockdevice frei sein. Da die Devices von \verb#guest1# geteilt werden sollten, muss die VM gestoppt werden. Dann können mit \verb#vbladed# die Devices auf der Schnittstelle \verb#br-guest# zur Verfügung gestellt werden. Beim Starten von \verb#vbladed# müssen zur Zuordnung der freigegebenen Devices zwei Nummern (Major und Minor) vergeben werden. Da der Hintergrundspeicher auf \verb#pcvirt01# residiert, wurden diese Schritte dort durchgeführt:
@@ -554,7 +554,8 @@ Ein Gratuitous ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert,
 Um ein weiteres Verständnis der Migration zu erhalten, haben wir nun eine erfolgreiche und eine fehlgeschlagene Migration mit \verb#tshark# aufgezeichnet und analysiert:
 
 \subsection{Erfolgreiche Migration von Xen 4.0 auf 4.1}
-Es wird eine TCP-Verbindung von \verb#pcvirt02#, wo die VM derzeit läuft, nach \verb#pcvirt01# aufgebaut und darüber ein sehr einfaches Protokoll genutzt. Dabei meldet sich \verb#pcvirt02# mit einem \verb|(receive)| bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. Anschließend schickt \verb#pcvirt02# den \emph{LinuxGuestRecord} mit sämtlichen Einstellungen und Zuständen der VM an \verb#pcvirt01#. Anschließend findet eine Übertragung der RAM-Inhalte der VM \verb#guest1# von \verb#pcvirt02#  an \verb#pcvirt01# statt. Den erfolgreichen Empfang quittiert \verb#pcvirt01# mit einem \verb|(ok)|.
+Es wird eine TCP-Verbindung von \verb#pcvirt02#, wo die VM derzeit läuft, nach \verb#pcvirt01# aufgebaut und darüber ein sehr einfaches Protokoll genutzt. Dabei meldet sich \verb#pcvirt02# mit einem \verb|(receive)| bei \verb#pcvirt01# an. Dieser erlaubt den Empfang über die Rückmeldung \verb|(ready receive)|. 
+Daraufhin schickt \verb#pcvirt02# den \emph{LinuxGuestRecord} mit sämtlichen Einstellungen und Zuständen der VM an \verb#pcvirt01#. Anschließend findet eine Übertragung der RAM-Inhalte der VM \verb#guest1# von \verb#pcvirt02#  an \verb#pcvirt01# statt. Den erfolgreichen Empfang quittiert \verb#pcvirt01# mit einem \verb|(ok)|.
 
 Im Folgenden sieht man einen Ausschnitt des Inhalts der Kommunikation zwischen den Hosts. Hervorgehoben sind jene Konfigurationsparameter, an denen im Falle der vorherigen gescheiterten Migrationen dies im Voraus hätte erkannt werden müssen (Zeilenumbrüche zur Erhöhung der Lesbarkeit eingefügt):
 \setupVerbatimOut
@@ -678,7 +679,7 @@ Es ist zu beobachten, dass nach der Übertragung des \emph{GuestRecords} und vor
 
 
 \subsection{Fehlerhafte Migration von Xen 4.1 auf 4.0}
-Bei der fehlgeschlagenen Migration läuft die Kommunikation wie im vorherigen Abschnitt ab -- wobei \verb#pcvirt01# und \verb#pcvirt02# vertauscht sind. Anstatt \verb#(ok)# meldet \verb#pcvirt02# diese Fehlermeldung:
+Bei der fehlgeschlagenen Migration läuft die Kommunikation grundsätzlich wie im vorherigen Abschnitt ab -- wobei \verb#pcvirt01# und \verb#pcvirt02# vertauscht sind und sich die Parameter des GuestRecords natürlich entsprechend ändern. Anstatt \verb#(ok)# meldet \verb#pcvirt02# diese Fehlermeldung:
 \setupVerbatimOut
 \begin{verbatim}
 <(err (type "<class 'xen.xend.XendError.XendError'>") (value '/usr/lib/xen-4.0/bin/xc_restore 24 10 1 2 0 0 0 0 failed'))
@@ -783,7 +784,7 @@ Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Ho
 \\
 Mit DRBD wird nun das Root- und Swap-Blockdevice einer neuen VM \verb#guest3# zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Die VM ist somit auf beiden Hosts lauffähig und der jeweilige andere Host wird nicht zwingend benötigt und kann somit z.B. für Wartungsarbeiten heruntergefahren werden können. 
 
-Somit könnte in oben beschriebenem Fall \verb#pcvirt01# ausgeschaltet werden, ohne dass ein Ausfall von \verb#guest3# verursacht würde. In den folgenden Abschnitten wird erklärt, wie diese DRBD-Blockdevices eingerichtet wurden.
+Somit könnte in oben beschriebenem Fall \verb#pcvirt01# ausgeschaltet werden, ohne einen Ausfall von \verb#guest3# zu verursachen. In den folgenden Abschnitten wird erklärt, wie diese DRBD-Blockdevices eingerichtet wurden.
 
 \section{DRBD installieren/konfigurieren}
 Alle Schritte dieses Abschnittes wurden jeweils auf \verb#pcvirt01# und \verb#pcvirt02# durchgeführt. Dazu wurde zu Beginn DRBD mittels \verb#apt-get#-Aufruf installiert:
@@ -792,7 +793,7 @@ Alle Schritte dieses Abschnittes wurden jeweils auf \verb#pcvirt01# und \verb#pc
 apt-get install drbd8-utils
 \end{verbatim}
 
-Anschließend wurde in den globalen Optionen \verb|/etc/drbd.d/global_config.conf| die Synchronisations-Geschwindigkeit auf 100 $\frac{Mbit}{s}$ begrenzt:
+Anschließend wurde in den globalen Optionen \verb|/etc/drbd.d/global_config.conf| die Syn\-chro\-ni\-sa\-ti\-ons\-ge\-schwind\-ig\-keit auf 100 $\frac{Mbit}{s}$ begrenzt:
 \setupVerbatimOut
 \begin{verbatim}
 global { usage-count no; }
@@ -857,7 +858,7 @@ resource guest3-swap {
 
 
 \section{DRBD initialisieren}
-Um die obigen Konfiguration aktivieren zu können, musste auf \verb#pcvirt02# eine LVM Volume Group \verb#storage# eingerichtet werden. Auf RAID haben wir hier bewusst verzichtet, da die entsprechenden Daten sobald DRBD eingerichtet ist übers Netz auf \verb#pcvirt01# gespiegelt werden. Dazu war das folgenden Kommando nötig:
+Um die obigen Konfiguration aktivieren zu können, musste auf \verb#pcvirt02# eine LVM Volume Group eingerichtet werden. Auf RAID haben wir hier bewusst verzichtet, da die entsprechenden Daten sobald DRBD eingerichtet ist übers Netz auf \verb#pcvirt01# gespiegelt werden. Dazu war das folgenden Kommando nötig:
 \setupVerbatimOut
 \begin{verbatim}
 vgcreate storage /dev/sdb1 
@@ -935,7 +936,7 @@ Als weiterführende Versuche die unsere Erkenntnisse vertiefen würden wir die f
 \begin{itemize}
 	\item Beobachtung des Migrationsverhaltens bei den beiden designierten Nachfolgern \verb#xl# und \verb#xapi# für \verb#xend#. Hierbei sollte ein besonderes Augenmerk darauf gerichtet werden, ob hier fehlerhafte Migrationen wie bei \verb#xend# unbehandelt bleiben wodurch der Zustand der VM verloren geht, und ob hier eine Vorherige Signalisierung geschieht, die die Möglichkeit einer Ablehnung der Migration vorsieht.
 	\item Konfiguration des OVS über mehrere Systeme hinweg, so dass dieser als ein die Systeme überspannender Switch mit gemeinsamen Tabellen und gemeinsamer Verwaltung auftritt.
-	\item Bei DRBD wäre eine Betrachtung des Verhaltens inklusive Lasttests und mehrerer Ausfälle interessant. Auch eine Betrachtung wie die Synchronisation genau von statten geht wäre interessant.  
+	\item Bei DRBD wäre eine Betrachtung des Verhaltens inklusive Lasttests und mehrerer Ausfälle interessant. Auch eine Betrachtung wie die Synchronisation bei DRBD genau vonstatten geht wäre interessant.  
 \end{itemize}
 
 % ovs gemeisame konfig koppel / tabellen
