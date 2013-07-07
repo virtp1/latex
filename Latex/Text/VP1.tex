@@ -698,14 +698,14 @@ Damit die MAC Tabellen der beteiligten Switches/Bridges nach einer erfolgreichen
 151619    22.586707000    Xensourc_95:de:ad    Broadcast    ARP    42    Gratuitous ARP for 192.168.1.1 (Request)
 \end{verbatim}
 
-Nachden nun VMs zwischen den Hosts migriert werden können, besteht nun das Problem, dass die Bridge \verb#br-vmonly# auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird. VMs, die dieses Netz nutzen wollen und sich auf verschiedenen Hosts befinden, können sich aktuell nicht erreichen. Dieser Umstand wird im folgenden Abschnitt durch VLAN-Trunking behoben.
+Nachdem nun VMs zwischen den Hosts migriert werden können, besteht nun das Problem, dass die Bridge \verb#br-vmonly# auf beiden Hosts isoliert besteht und nicht auf eine physische Verbindung zwischen den Hosts abgebildet wird. VMs, die dieses Netz nutzen wollen und sich auf verschiedenen Hosts befinden, können sich aktuell nicht erreichen. Dieser Umstand wird im folgenden Abschnitt durch VLAN-Trunking behoben.
 
 \chapter{VLAN-Trunking zwischen den Hosts}
 \label{vlan_trunk}
 Damit zwei VMs, z.B. \verb#guest1# und \verb#guest2#, auch wenn sie nicht beide auf derselben Hostmaschine laufen, trotzdem über \verb#br-vmlonly# kommunizieren können, muss der Datenverkehr dieses virtuellen Netzes durch ein VLAN über \verb#br-guest# zwischen den beiden Hosts transportiert werden. Wir wählen hierfür die VLAN ID 1234.
 
 \section {Vorarbeiten auf  \texttt{pcvirt02}}\label{ovs2}
-Nun wird auch auf \verb#pcvirt02#, wie in Kapitel \ref{chap:whezzy_ugprade}, ein Distributionsupgrade auf Wheezy durchgeführt. Anschließend muss auf \verb#pcvirt02#  auch der Open vSwitch installiert (vgl. Kapitel~\ref{chap:ovs}), die klassiche Bridge entfernt und die genutzten Bridges neu erstellt werden:
+Nun wird auch auf \verb#pcvirt02#, wie in Kapitel \ref{chap:whezzy_ugprade}, ein Distributionsupgrade auf Wheezy durchgeführt. Anschließend muss auf \verb#pcvirt02#  auch der Open vSwitch installiert (vgl. Kapitel~\ref{chap:ovs}), die klassische Bridge entfernt und die genutzten Bridges neu erstellt werden:
 \setupVerbatim{bash}
 \begin{verbatim}
 apt-get install openvswitch-brcompat openvswitch-switch openvswitch-datapath-dkms
@@ -742,7 +742,7 @@ iface br-vmonly inet manual
 \section{VLAN über Switch}
 Um die Ethernet-Rahmen der Bridge \verb#br-vmonly# über das physische Netz zwischen den zwei Hostsystemen zu transportieren, müssen diese gemäß dem Standard IEEE802.1Q \cite{ieee8021q} mit einem VLAN Tag versehen werden. Hierbei handelt es sich um eine Ergänzung des Ethernet-Headers um zwei weitere Felder, bzw. wenn man so will, um eine Ergänzung mit einem weiteren Header. Konkret werden vor dem Ethertype des ursprünglichen Ethernet-Frames 4 Byte eingefügt. Hierbei werden die ersten beiden Byte (der \emph{Tag Protocol Identifier}) auf den Wert 0x8100 gesetzt, was den Ethernet-Rahmen als VLAN nutzend kennzeichnet, oder als quasi-Ethertype für VLAN interpretiert werden kann. Die weiteren 2 Byte enthalten 3 Bit für Benutzer-Prioritäten, 1 weiteres Kontrollbit für Kompatibilitätszwecke zwischen Token-Ring und Ethernet, sowie den 12 Bit langen VLAN Tag. Daran anschließend folgt dann der ursprüngliche Ethertype des Rahmens.
 
-Um den OVS so zu konfigurieren, dass Rahmen der Bridge \verb#br-vmonly# getagged mit der VLAN-ID 1234 über \verb#br-guest# versandt werden sollen werden folgende Konfigurationsschritte durchgeführt:\setupVerbatimOut
+Um den OVS so zu konfigurieren, dass Rahmen der Bridge \verb#br-vmonly# getagged mit der VLAN-ID 1234 über \verb#br-guest# versandt werden, müssen folgende Konfigurationsschritte durchgeführt werden:\setupVerbatimOut
 \begin{verbatim}
 ovs-vsctl del-br br-vmonly
 ovs-vsctl add-br br-vmonly br-guest 1234
@@ -752,7 +752,7 @@ Beide VMs wurden nun auf unterschiedlichen Hosts gestartet, allerdings war noch 
 \\
 $\Rightarrow$ Es muss noch das entsprechende VLAN mit ID 1234 auf dem CISCO Switch eingerichtet werden.\\
 
-Da die grundeinstellung des Switches nur ein Default VLAN ohne Tags (Ethernet-Rahmen ohne 802.1Q) auf allen Ports kennt, konfigurieren wir nun das VLAN 1234 und ändern die Konfiguration der Ports an denen Hostsysteme hängen, sodass auf diesen getaggete Rahmen dieses VLANs ausgegeben und weitergeleitet werden:
+Da die Grundeinstellung des Switches nur ein Default VLAN ohne Tags (Ethernet-Rahmen ohne 802.1Q) auf allen Ports kennt, konfigurieren wir nun das VLAN 1234 und ändern die Konfiguration der Ports an denen Hostsysteme hängen, sodass auf diesen getaggete Rahmen dieses VLANs ausgegeben und weitergeleitet werden:
 \setupVerbatimOut
 \begin{verbatim}
 switch4cd502# conf t
@@ -779,7 +779,7 @@ Nun ist eine Konnektivität über \verb#br-vmonly# auch hostübergreifend mögli
 
 \chapter{Distributed Replicated Block Device}\label{chap:drbd}
 
-Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Um in diesem Fall die VM weiter betreiben zu können ist es nötig, dass der Hintergrundspeicher auf beiden Hosts lokal zur Verfügung steht. Dazu muss jedoch der Inhalt diesen zwischen beiden Rechnern synchron gehalten werden. Die Technik \emph{Distributed Replicated Block Device} (DRBD) stellt solche Funktionalität zur Verfügung. 
+Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Hintergrundspeicher dann nicht mehr zur Verfügung steht. Um in diesem Fall die VM weiter betreiben zu können ist es nötig, dass der Hintergrundspeicher auf beiden Hosts lokal zur Verfügung steht. Dazu muss jedoch der Inhalt diesen zwischen beiden Rechnern synchron gehalten werden. Die Technik \emph{Distributed Replicated Block Device} (DRBD) stellt solche Funktionalität zur Verfügung. 
 \\
 Mit DRBD wird nun das Root- und Swap-Blockdevice einer neuen VM \verb#guest3# zwischen \verb#pcvirt01# und \verb#pcvirt02# synchronisiert. Die VM ist somit auf beiden Hosts lauffähig und der jeweilige andere Host wird nicht zwingend benötigt und kann somit z.B. für Wartungsarbeiten heruntergefahren werden können. 
 
@@ -799,7 +799,7 @@ global { usage-count no; }
 common { syncer { rate 100M; } }
 \end{verbatim}
 
-Die Konfiguration für das Root-Device wurde in der Datei \verb|/etc/drbd.d/guest3-root.res| vorgenommen:
+Die Konfiguration für das Root-Device wurde in der Datei \verb|/etc/drbd.d/guest3-root.res| vorgenommen. Die Konfiguration umfasst Zugriffskontrolle, das Verhalten nach unterschiedlichen \verb#Split-Brain# (\verb#after-sb-*#) Situationen, bei denen die Datenspeicher nicht mehr konsistent sind, sowie die Konfiguration der Devices, Speicherorte und Netzpfade der einzelnen Blockdevice Instanzen:
 \setupVerbatimOut
 \begin{verbatim}
 resource guest3-root {
