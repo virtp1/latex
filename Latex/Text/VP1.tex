@@ -896,7 +896,7 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 Hier sieht man, dass das erste Device noch synchronisiert wird und der Fortschritt bei 12,0\% liegt. Das zweite Device wurde bereits vollständig synchronisiert, was man an \verb#UpToDate/UpToDate# erkennen kann.
-Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe war daher wie folgt:
+Wenig später betrachtet ist die Synchronisation abgeschlossen und die Ausgabe erfolgt daher wie folgt:
 
 \setupVerbatimOut
 \begin{verbatim}
@@ -909,14 +909,14 @@ srcversion: 41C52C8CD882E47FB5AF767
     ns:160728 nr:0 dw:0 dr:160728 al:0 bm:10 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
 \end{verbatim}
 
-Um auf die DRBD-Blockdevices zugreifen zu können, mussten diese noch in den \emph{Primary State} versetzt werden, da nur im \emph{Primary} Modus stehen die Devices zum lesen und schreiben zur Verfügung stehen:
+Um auf die DRBD-Blockdevices zugreifen zu können, mussten diese noch in den \emph{Primary State} versetzt werden, da nur im \emph{Primary} Modus stehen die Devices zum Lesen und Schreiben zur Verfügung stehen:
 \setupVerbatimOut
 \begin{verbatim}
 drbdadm primary all
 \end{verbatim}
 
 \section{VM auf DRBD-Devices}
-Dann wurde ein neues Xen-Gastsystem \verb#guest3# auf den gerade eingerichteten DRBD-Devices installiert und draufhin gestartet:
+Dann wurde ein neues Xen-Gastsystem \verb#guest3# auf den gerade eingerichteten DRBD-Devices installiert und daraufhin gestartet:
 \setupVerbatimOut
 \begin{verbatim}
 xen-create-image --ip 192.168.1.3 --bridge=br-guest  --swap-dev=/dev/drbd2 --password=123 --image-dev=/dev/drbd1 --hostname=guest3 --vcpus=2 --dist wheezy
@@ -929,8 +929,7 @@ Mit DRBD lässt sich wie zuvor gezeigt, die Verfügbarkeit von Hintergrundspeich
 
 \chapter{Fazit}
 Unser Hauptziel, die Live-Migration von virtualisierten Maschinen, haben
-wir nach einigen Versuchen erfolgreich durchführen können. Die hierzu nötigen Fehlversuche und darauffolgenden Analysen haben einen tiefen Einblick in die Migrationsfunktionalität des Managementinterfaces \verb#xend# gewährt.
-Auf dem Gebiet der Storagevirtualisierung konnten vier Techniken RAID, LVM, AoE und DRBD betrachtet und ausprobiert werden. Wobei RAID für Datenredundanz über mehrere Platten innerhalb eines Hostsystems sorgt, LVM dazu dient Logical Volumes die unabhängig von der Größe der physischen Datenspeichern sind, AoE für die Bereitstellung eines Datenspeichers innerhalb eines LAN dient und DRBD sowohl für die Bereitstellung eines Datenspeichers über ein Netz, als auch für die Redundanz des Datenspeichers über mehrere Systeme hinweg dient.
+wir nach einigen Versuchen erfolgreich durchführen können. Die hierzu nötigen Fehlversuche und die darauf folgenden Analysen haben einen tiefen Einblick in die Migrationsfunktion des Managementinterfaces \verb#xend# gewährt. Auf dem Gebiet der Storage-Virtualisierung konnten vier Techniken RAID, LVM, AoE und DRBD betrachtet und ausprobiert werden. Wobei RAID für Datenredundanz über mehrere Platten innerhalb eines Hostsystems sorgt, LVM dazu dient Logical Volumes die unabhängig von der Größe der physischen Datenspeichern sind zu erzeugen, AoE für die Bereitstellung eines Datenspeichers innerhalb eines LAN und DRBD sowohl für die Bereitstellung eines Datenspeichers über ein Netz, als auch für die Redundanz des Datenspeichers über mehrere Systeme hinweg dient.
 
 Als weiterführende Versuche die unsere Erkenntnisse vertiefen würden wir die folgenden drei Versuche vorschlagen, die nicht mehr im Rahmen dieses Praktikums betrachtet werden konnten:
 \begin{itemize}
