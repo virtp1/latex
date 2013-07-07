@@ -340,7 +340,7 @@ Ein nebenbei laufender \verb#tcpdump# auf dem empfangenden System zeigte sehr gr
     192.168.1.1.5001 > 192.168.1.2.57025: Flags [.], cksum 0x837a (@\bfseries incorrect@ -> 0x86f4), seq 0, ack 14876497, win 16397, options [nop,nop,TS val 356977 ecr 396548], length 0
 \end{verbatim}
 Wohingegen Ping-Pakete, welche die MTU der \verb#vif#-Schnittstellen oder Bridges überschritten fragmentiert -- oder bei gesetztem \verb#DF#-Flag abgewiesen -- wurden.
-Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Bei dieser Technik übernimmt die Schnittstelle die Segmentierung der TCP-Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP-Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schnittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben. Die \verb#cksum# \verb#incorrect# Meldung entsteht ebenso durch eine Offloadingtechni. Hierbei werden die Ethernet-Checksummen von der Schnittstelle und nicht dem OS gesetzt. 
+Dies liegt daran, dass die Treiber der virtualisierten Schnittstellen dem Kernel mitteilen sie würden \emph{TCP Segment Offloading} (TSO) unterstützen. Bei dieser Technik übernimmt die Schnittstelle die Segmentierung der TCP-Daten. Im Fall der Virtualisierung werden die unsegmentierten TCP-Daten an den Hypervisor übergeben und in diesem entweder vor der Übertragung auf physische Schnittstellen segmentiert oder wiederum unsegmentiert an andere auf diesem Host laufende Gastbetriebssysteme weitergegeben. Die \verb#cksum# \verb#incorrect# Meldung entsteht ebenso durch eine Offloadingtechnik. Hierbei werden die Ethernet-Checksummen von der Schnittstelle und nicht dem OS gesetzt. 
 Zusätzlich wurde getestet, ob die Bridges und \verb#vif#-Schnittstellen mit Jumbo-Frames von 9000 Byte Größe umgehen können. Nach Erhöhung der MTU auf der Bridge, den \verb#vif#-Schnittstellen und auf den Schnittstellen des Gastes konnten Jumbo-Frames genutzt werden.
 
 \section{Hardware Virtual Machine}
@@ -388,7 +388,7 @@ Die jetzige Konfiguration des Hostsystems \verb#pcvirt01# kann somit VMs erfolgr
 \end{figure}
 \chapter{ATA-Over-Ethernet}
 \label{chap:aoe}
-Damit die VMs nicht fest an einen Host gebunden sind, soll in diesem Kapitel der Hintergrundspeicher der VM \verb#guest1# für weitere Hosts freigegeben werden. Dazu wurde \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} eingesetzt. Eine Alternative hierzu wäre das \emph{internet Small Computer System Interface} (iSCSI) \cite{rfc3720}. Da bereits die andere Gruppe diese Technologie eingesetzt hatte, haben wir uns für AoE entschieden um eine weitere mögliche Technik zu demonstrieren. 
+Damit die VMs nicht fest an einen Host gebunden sind, soll in diesem Kapitel der Hintergrundspeicher der VM \verb#guest1# für weitere Hosts freigegeben werden. Dazu wurde \emph{ATA-Over-Ethernet} (AoE) \cite{hopkins2006aoe} eingesetzt. Eine Alternative hierzu wäre das \emph{internet Small Computer System Interface} (iSCSI) \cite{rfc3720}. Da bereits eine andere Praktikumsgruppe diese Technologie eingesetzt hat, haben wir uns für AoE entschieden um eine weitere mögliche Technik zu demonstrieren. 
 \\
 Die anschließenden Abschnitte beschreiben die Einrichtung, Konfiguration und Inbetriebnahme von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02#.
 
@@ -399,7 +399,7 @@ Vor der Einrichtung von AoE auf den Hosts \verb#pcvirt01# und \verb#pcvirt02# ha
 grep ATA_OVER /boot/config-`uname -r`
     CONFIG_ATA_OVER_ETH=m
 \end{verbatim} 
-Die Ausgabe zeigt auf beiden Rechnern die Unterstützung von AoE als Kernelmodul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts mittels \verb#modprobe aoe# geladen und  in \verb#/etc/modules# eingefügt, damit es beim Start automatisch geladen wird. 
+Die Ausgabe zeigt auf beiden Rechnern die Unterstützung von AoE als Kernelmodul. Daher haben wir das Modul \verb#aoe# auf den beiden Hosts mittels \verb#modprobe aoe# geladen und in die Konfigurationsdatei \verb#/etc/modules# eingefügt, damit es beim nächsten Systemstart automatisch geladen wird. 
 
 \section{Einrichtung von vbladed}
 Zum Einrichten eines AoE-Targets mittels \verb#vbladed#, muss das Blockdevice frei sein. Da die Devices von \verb#guest1# geteilt werden sollten, muss die VM gestoppt werden. Dann können mit \verb#vbladed# die Devices auf der Schnittstelle \verb#br-guest# zur Verfügung gestellt werden. Beim Starten von \verb#vbladed# müssen zur Zuordnung der freigegebenen Devices zwei Nummern (Major und Minor) vergeben werden. Da der Hintergrundspeicher auf \verb#pcvirt01# residiert, wurden diese Schritte dort durchgeführt:
@@ -412,7 +412,7 @@ vbladed 0 2 br-guest /dev/storage/guest1-swap
 \end{verbatim}
 Damit die Devices nach einem Neustart wieder freigegeben werden, kommen die zwei letzten Befehle auch in \verb#/etc/rc.local#. 
 \section{Einrichtung des Clients}
-Da Gruppe 2 aus dem Praktium ausgestiegen ist und daher \verb#pcvirt02# noch nicht konfiguriert war, wurde dieser analog zu \verb#pcvirt01#  -- soweit nötig -- eingerichtet. Auf das Distributionsupgrade auf Wheezy und Open vSwitch wurde vorerst verzichtet; in Abschnitt \ref{ovs2} wird dies nötig und nachgeholt.
+Da Gruppe 2 aus dem Praktikum ausgestiegen ist und daher \verb#pcvirt02# noch nicht konfiguriert war, wurde dieser analog zu \verb#pcvirt01#  -- soweit nötig -- eingerichtet. Auf das Distributionsupgrade auf Wheezy und Open vSwitch wurde vorerst verzichtet; in Abschnitt \ref{ovs2} wird dies nötig und nachgeholt.
 \setupVerbatim{bash}
 \begin{verbatim}
 brctl addbr br-guest
@@ -470,7 +470,7 @@ disk        = [
               ]
 \end{verbatim}
 
-Die neue Konfiguration wurde durch Ausführen der Kommandos \verb#xm destroy# und anschließendem \verb#xm# \verb#create# auf \verb#pcvirt01# getestet. Da \verb#pcvirt01# selbst das AoE-Target ist, wird hier AoE noch nicht genutzt (vgl. Abschnitt \ref{dirtysym}).
+Die neue Konfiguration wurde durch Ausführen der Kommandos \verb#xm destroy# und anschließendem \verb#xm# \verb#create# auf \verb#pcvirt01# getestet. Da \verb#pcvirt01# selbst das AoE-Target ist, wird auf diesem System AoE selbst noch nicht genutzt (vgl. Abschnitt \ref{dirtysym}).
 Aus diesem Grund wird die VM nun abermals auf \verb#pcvirt01# beendet, ihre Konfigurationsdatei auf das entfernte System \verb#pcvirt02# kopiert, und die VM dort ausgeführt. Mittels \verb#tshark# \verb#-R aoe# können nun AoE-PDUs -- z.B. Schreib- und Lesezugriffe -- beobachtet werden (Ausgabe um Daten verkürzt dargestellt):
 \setupVerbatimOut
 \begin{verbatim}
@@ -483,7 +483,7 @@ Aus diesem Grund wird die VM nun abermals auf \verb#pcvirt01# beendet, ihre Konf
 Hiermit ist die Konfiguration von AoE abgeschlossen und die Blockdevices von \verb#guest1# auch von \verb#pcvirt02# erreichbar. Dies sollte nun durch den gemeinsamen Datenspeicher Live-Migrationen zwischen den beiden Hostsystemen ermöglichen.
 
 \chapter{Live-Migration einer VM}\label{migr}
-Durch den verfügbaren gemeinsamen Datenspeicher waren nun alle Vorraussetzungen geschaffen, Versuche mit Live-Migrationen durchzuführen. Im Folgenden wird in nächsten Abschnitt die nötige Konfiguration des Xen-Management-Daemons \verb#xend# beschrieben. In Abschnitt \ref{mig_vers} werden dann Stolpersteine bei der Migration ausgeräumt, bis eine erfolgreiche Migration durchgeführt werden kann. Schließlich wird in Abschnitt \ref{mig_tcpdump} der Datenverkehr während einer Migration beobachtet und ausgewertet.
+Durch den verfügbaren gemeinsamen Datenspeicher waren nun alle Voraussetzungen geschaffen, Versuche mit Live-Migrationen durchzuführen. Im Folgenden wird in nächsten Abschnitt die nötige Konfiguration des Xen-Management-Daemons \verb#xend# beschrieben. In Abschnitt \ref{mig_vers} werden dann Stolpersteine bei der Migration ausgeräumt, bis eine erfolgreiche Migration durchgeführt werden kann. Schließlich wird in Abschnitt \ref{mig_tcpdump} der Datenverkehr während einer Migration beobachtet und ausgewertet.
 \section{Konfiguration von xend}\label{xend_konfig}
 Um VMs migrieren zu können, muss auf beiden Hostsystemen die Konfigurationsdatei \verb#/etc/xen/xend-# \verb#config.sxp# angepasst werden \cite{man_xendconfig}:
 \setupVerbatimOut
@@ -525,7 +525,7 @@ Ursache: Die VM verwendet einen neueren Kernel, der auf dem Zielsystem \verb#pcv
 \subsection {Dritter Versuch $\Rightarrow$ Falsche Xen Versionen}
 Auch nach Abänderung des Kernels in der VM-Konfiguration auf eine ältere Version, schlägt die Migration wieder fehl. 
 \\
-Ursache: VMs können bei Xen nur zwischen Hosts der gleichen Version live migriert werden. Die einzige Ausnahme ist die Migration zur nächsthöheren Xen Version, damit die Durchführung von Updates im laufenden Betrieb möglich ist \cite{wiki_xen_version}.
+Ursache: VMs können bei Xen nur zwischen Hosts der gleichen Version live migriert werden. Die einzige Ausnahme ist die Live-Migration zur nächsthöheren Xen Version, damit die Durchführung von Updates im laufenden Betrieb möglich ist \cite{wiki_xen_version}.
 \\
 \\
 \Large
@@ -540,7 +540,7 @@ xm create guest1.cfg
 xm migrate --live guest1 192.168.1.131
 \end{verbatim}
 
-Um die Unerreichbarkeit der VM wärend der Migration zu messen, wurde mittels einer angepassten version von iperf -- die eine höhere zeitliche Auflösung gestattet -- ein UDP-Datestrom mit 100 MBit generiert. Da die Größe der UDP Segmente 1470 Byte beträgt sind 8500 Pakete pro Sekunde respektive 850 Packete pro 100 Millisekunden nötig. Gemessen wurde die Anzahl der empfangenen UDP Segmente. Die Ergebnisse sind in Abbilung \ref{migration_plot} dargestellt. Der Einbruch findet zum Zeitpunkt der Stop-and-Copy Phase statt. Der Abfall von \~850 auf \~200 Pakete pro 100 ms lässt auf einen Ausfall von \~75 ms schließen. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit mehr laufenden Services teilweise ebenfalls Ausfallzeiten um die 80 ms bis 100 ms gemessen wurden.
+Um die Unerreichbarkeit der VM während der Migration zu messen, wurde mittels einer angepassten Version von iperf -- die eine höhere zeitliche Auflösung gestattet -- ein UDP-Datenstrom mit 100 MBit generiert. Da die Größe der UDP Segmente 1470 Byte beträgt sind 8500 Pakete pro Sekunde respektive 850 Pakete pro 100 Millisekunden nötig. Gemessen wurde die Anzahl der empfangenen UDP Segmente. Die Ergebnisse sind in Abbildung \ref{migration_plot} dargestellt. Der Einbruch findet zum Zeitpunkt der Stop-and-Copy Phase statt. Der Abfall von \~850 auf \~200 Pakete pro 100 ms lässt auf einen Ausfall von \~75 ms schließen. Diese Zeiten sind durch die Ergebnisse von \cite{clark2005live} durchaus denkbar, da dort auch mit mehr laufenden Services teilweise ebenfalls vergleichbare Ausfallzeiten um die 80 ms bis 100 ms gemessen wurden.
 \\
 Ein Gratuitous ARP, welcher den Umzug der MAC Adresse der VM im Netz propagiert, wird in Abschnitt \ref{Gratuitous} nachgewiesen.
 
