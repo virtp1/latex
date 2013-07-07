@@ -927,7 +927,7 @@ Die VM \verb|guest3| kann nun frei zwischen \verb#pcvirt01# und \verb#pcvirt02# 
 \\
 Mit DRBD lässt sich wie zuvor gezeigt, die Verfügbarkeit von Hintergrundspeicher in einem Cluster aus mehreren Hostsystemen erhöhen, da diese Daten auf mehreren Hosts abgespeichert sind.
 
-\todo{Fazit/Schluss}
+\chapter{Fazit}
 Unser Hauptziel, die Live-Migration von virtualisierten Maschinen, haben
 wir nach einigen Versuchen erfolgreich durchführen können. Die hierzu nötigen Fehlversuche und darauffolgenden Analysen haben einen tiefen Einblick in die Migrationsfunktionalität des Managementinterfaces \verb#xend# gewährt.
 Auf dem Gebiet der Storagevirtualisierung konnten vier Techniken RAID, LVM, AoE und DRBD betrachtet und ausprobiert werden. Wobei RAID für Datenredundanz über mehrere Platten innerhalb eines Hostsystems sorgt, LVM dazu dient Logical Volumes die unabhängig von der Größe der physischen Datenspeichern sind, AoE für die Bereitstellung eines Datenspeichers innerhalb eines LAN dient und DRBD sowohl für die Bereitstellung eines Datenspeichers über ein Netz, als auch für die Redundanz des Datenspeichers über mehrere Systeme hinweg dient.
