@@ -7,11 +7,22 @@
 
 \chapter{Einleitung}
 \todo{Neuschreiben, Wheezy erwähnen, Zielsetzung}
-Notwendige Anpassungen des Hosts, damit wir VMs erstellen können...
-Unser Praktikum unterteilt sich neben der Erstellung von virtuellen Maschinen (VMs) auf fünf größere Aufgaben (kapitel? bereiche?)... \\
-Die lokale Infrastruktur auf unserem Rechner ergänzen wir mit einem \emph{Logical Volume Manager} (LVM), aufbauend auf einem \emph{Redundant Array of Independent Disks} (RAID) zur Speicherverwaltung und Open vSwitch als Ersatz der standardmäßigen Bridge. \\
-Erstellt haben wir insgesamt vier virtuelle Maschinen (VMs) mit unterschiedlichen Parametern und Einstellungen. Dabei testeten wir verschiedene Netzschnittstellentypen und verschiedene Virtualisierungsmethoden. \\
-Für die Live-Migration der VMs verwendeten wir Blockdevices, die über verschiedene Möglichkeiten in der Praktikumsumgebung zwischen den Hosts freigegeben wurden. Dazu benutzten wir \emph{ATA-Over-Ethernet} (AOE), wo die Daten nur auf einem der Hosts hinterlegt sind, und \emph{Distributed Replicated Block Device} (DRBD), bei dem die Daten redundant auf mehreren Hosts gespeichert werden. 
+
+Primäre Zielsetzung unserer Versuche war es vorerst, \emph{virtualisierte
+Maschinen} (VMs) auf der Praktikumsumgebung zu erstellen, und diese
+zwischen Hostsystemen mittels Live-Migration zu verschieben. Dazu waren viele
+Vorarbeiten und Versuche notwendig. \\
+Nachdem wir schließlich VMs erfolgreich migrieren konnten experimentierten wir mit
+weiteren Möglichkeiten der Virtualisierung und verteilten Datenspeichern.
+\\
+Die Ausarbeitung behandelt in den Kapiteln \ref{chap:whezzy_ugprade} bis \ref{chap:ovs} die Vorarbeiten
+an der zur Virtualisierung genutzten Infrastruktur, die nötig sind um VMs zu erstellen.
+Dies beginnt in Kapitel \ref{chap:whezzy_ugprade} mit einem Distributionsupgrade des Debiansystems, 
+das zur Virtualisierung dienen soll, um neuere Versionen der genutzten Programme nutzen zu können. Anschließend wird in Kapitel \ref{chap:stor} ein Datenspeicher für die zukünftigen VMs geschaffen. Hierzu dient der \emph{Logical Volume Manager} (LVM) der auf einem darunter liegenden \emph{Redundant Array of Independent Disks} (RAID) aufgesetzt ist. Kapitel \ref{chap:ovs} beschäftigt sich mit der erstellung eines Netzes für die Virtuellen Maschinen mittels \emph{Open vSwitch} (OVS)
+
+Ab Kapitel \ref{vms} erstellten wir insgesamt vier VMs mit unterschiedlichen
+Parametern und Einstellungen. Hierbei wurden, die Möglichkeit der rein in Software ablaufenden Paravirtualisierung und der Hardwaregestützten Vollvirtualisierung (Hardware Virtual Maschine -- HVM) betrachtet. Um später Live-Migrationen durchführen zu können ist es notwendig den Hintergrundspeicher der VMs über das Netz zur Verfügung zu stellen. Zu diesem Zweck wird in Kapitel \ref{chap:aoe} \emph{ATA-Over-Ethernet} (AoE) eingerichtet. Daraufhin finden in Kapitel \ref{migr} Versuche zur Live-Migration von VMs statt. Im Darauffolgenden Kapitel \ref{vlan_trunk} wird ein internes Netz auf das nur die VMs zugriff haben Hostübergreifend mit Hilfe des OVS verfügbar gemacht. Den Abschluss der Arbeit bildet in Kapitel \ref{chap:drbd} ein Versuch ein \emph{Distributed Replicated Block Device} (DRBD) aufzubauen, bei dem mehrere Kopien eines Blockdevices Hostübergreifend konsistent gehalten werden, um Ausfallsicherheit zu schaffen.
+
 \chapter{Vorarbeit}
 \label{chap:whezzy_ugprade}
 Bevor mit dem eigentlichen Praktikum begonnen wurde, haben wir einige Vorarbeiten erledigt: \\ 
@@ -34,7 +45,7 @@ Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährl
 
 Der nächste Schritt ist nun die Einrichtung eines Datenspeichers für unsere Virtuellen Maschinen.
 
-\chapter{Storage}
+\chapter{Storage}\label{chap:stor}
 Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen \emph{Redundant Array of Independent Disks} (RAID) Verbund über zwei Festplatten zu erzeugen (vgl. Abschnitt \ref{raid}). Wir entschieden uns für RAID Level 1. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem \emph{Logical Volume Manager} (LVM) erzeugte \emph{Logical Volumes} (LV) dienen, was in Abschnitt \ref{lvm} umgesetzt wird.
 \section{RAID}
 \label{raid}
@@ -195,7 +206,7 @@ Anschließend wurde die Konfiguration, durch einen Neustart geladen. Die Konnekt
 \\
 Die grundlegenden Anforderungen an die Infrastruktur des Hostrechners sind damit erfüllt, sodass im nächsten Kapitel die erste VM erstellt werden kann.
 
-\chapter{Virtuelle Maschinen}
+\chapter{Virtuelle Maschinen}\label{vms}
 Nachdem nun alle notwendigen Vorbereitungen abgeschlossen waren, konnte die erste \emph{virtuelle Maschine} (VM) erstellt werden. Dazu wurde das Kommando \verb#xen-create-image# genutzt, welches die Erstellung einer paravirtualisierten VM weitestgehend automatisiert. Es wird zuerst die VM \verb#guest1# mit dem Betriebssystem Debian Wheezy, anschließend dann \verb#guest2# mit Debian Squeezy erstellt.
 \\
 Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wiederum mit Debian Wheezy erstellt. Bei dieser Vollvirtualisierung läuft das Gastbetriebssystem prinzipiell ohne Anpassungen an den Hypervisor. Um IO-Operationen zu beschleunigen werden jedoch spezielle Treiber für Netzschnittstellen und Festplatten verwendet. 
@@ -480,7 +491,7 @@ Aus diesem Grund wird die VM nun abermals auf \verb#pcvirt01# beendet, ihre Konf
 
 Hiermit ist die Konfiguration von AoE abgeschlossen und die Blockdevices von \verb#guest1# auch von \verb#pcvirt02# erreichbar. Dies sollte nun durch den gemeinsamen Datenspeicher Live-Migrationen zwischen den beiden Hostsystemen ermöglichen.
 
-\chapter{Live-Migration einer VM}
+\chapter{Live-Migration einer VM}\label{migr}
 Durch den verfügbaren gemeinsamen Datenspeicher waren nun alle Vorraussetzungen geschaffen, Versuche mit Live-Migrationen durchzuführen. Im Folgenden wird in nächsten Abschnitt die nötige Konfiguration des Xen-Management-Daemons \verb#xend# beschrieben. In Abschnitt \ref{mig_vers} werden dann Stolpersteine bei der Migration ausgeräumt, bis eine erfolgreiche Migration durchgeführt werden kann. Schließlich wird in Abschnitt \ref{mig_tcpdump} der Datenverkehr während einer Migration beobachtet und ausgewertet.
 \section{Konfiguration von xend}\label{xend_konfig}
 Um VMs migrieren zu können, muss auf beiden Hostsystemen die Konfigurationsdatei \verb#/etc/xen/xend-# \verb#config.sxp# angepasst werden \cite{man_xendconfig}:
@@ -775,7 +786,7 @@ switch4cd502# write memory
 
 Nun ist eine Konnektivität über \verb#br-vmonly# auch hostübergreifend möglich, wie auch ein Versuch mit \verb#ping# bestätigt. 
 
-\chapter{Distributed Replicated Block Device}
+\chapter{Distributed Replicated Block Device}\label{chap:drbd}
 
 Mit AoE (vgl. Kapitel \ref{chap:aoe}) kann zwar ein Blockdevice einem anderen Host über das Netz zu Verfügung gestellt werden. Wenn man jedoch z.B. \verb#pcvirt01# abschalten muss, kann die VM \verb#guest1# nicht auf \verb#pcvirt02# weiter ausgeführt werden, da der Festplattenspeicher nicht mehr zur Verfügung steht. Um in diesem Fall die VM weiter betreiben zu können ist es nötig, dass der Hintergrundspeicher auf beiden Hosts lokal zur Verfügung steht. Dazu muss jedoch der Inhalt diesen zwischen beiden Rechnern synchron gehalten werden. Die Technik \emph{Distributed Replicated Block Device} (DRBD) stellt solche Funktionalität zur Verfügung. 
 \\
