@@ -3,16 +3,16 @@
 Primäre Zielsetzung unserer Versuche war es vorerst, \emph{virtualisierte
 Maschinen} (VMs) auf der Praktikumsumgebung zu erstellen, und diese
 zwischen Hostsystemen mittels Live-Migration zu verschieben. Dazu waren viele
-Vorarbeiten und Versuche notwendig. Nachdem wir schließlich VMs erfolgreich migrieren konnten experimentierten wir mit
+Vorarbeiten und Versuche notwendig. Nachdem wir schließlich VMs erfolgreich migrieren hatten können, experimentierten wir mit
 weiteren Möglichkeiten der Virtualisierung und verteilten Datenspeichern.
 
 Die Ausarbeitung behandelt in den Kapiteln \ref{chap:whezzy_ugprade} bis \ref{chap:ovs} die Vorarbeiten
 an der zur Virtualisierung genutzten Infrastruktur, die nötig sind um VMs zu erstellen.
 Dies beginnt in Kapitel \ref{chap:whezzy_ugprade} mit einem Distributionsupgrade des Debiansystems, 
-das zur Virtualisierung dienen soll, um neuere Versionen der genutzten Programme nutzen zu können. Anschließend wird in Kapitel \ref{chap:stor} ein Datenspeicher für die zukünftigen VMs geschaffen. Hierzu dient der \emph{Logical Volume Manager} (LVM) der auf einem darunter liegenden \emph{Redundant Array of Independent Disks} (RAID) aufgesetzt ist. Kapitel \ref{chap:ovs} beschäftigt sich mit der Erstellung eines Netzes für die Virtuellen Maschinen mittels \emph{Open vSwitch} (OVS).
+das zur Virtualisierung dienen soll, um neuere Versionen der genutzten Programme nutzen zu können. Anschließend wird in Kapitel \ref{chap:stor} ein Datenspeicher für die zukünftigen VMs geschaffen. Hierzu dient der \emph{Logical Volume Manager} (LVM) der auf einem darunter liegenden \emph{Redundant Array of Independent Disks} (RAID) aufgesetzt ist. Kapitel \ref{chap:ovs} beschäftigt sich mit der Erstellung eines Netzes für die virtuellen Maschinen mittels \emph{Open vSwitch} (OVS).
 
 Ab Kapitel \ref{vms} werden insgesamt vier VMs mit unterschiedlichen
-Parametern und Einstellungen erstellt. Hierbei wurden die Möglichkeiten der rein in Software ablaufenden Paravirtualisierung und der Hardware-gestützten Vollvirtualisierung (Hardware Virtual Maschine -- HVM) betrachtet. Um später Live-Migrationen durchführen zu können ist es notwendig den Hintergrundspeicher der VMs über das Netz zur Verfügung zu stellen. Zu diesem Zweck wird in Kapitel \ref{chap:aoe} \emph{ATA-Over-Ethernet} (AoE) eingerichtet. Daraufhin finden in Kapitel \ref{migr} Versuche zur Live-Migration von VMs statt. Im darauf folgenden Kapitel \ref{vlan_trunk} wird ein internes Netz, auf das nur die VMs Zugriff haben, hostübergreifend mit Hilfe des OVS verfügbar gemacht. Den Abschluss der Arbeit bildet in Kapitel \ref{chap:drbd} ein Versuch ein \emph{Distributed Replicated Block Device} (DRBD) aufzubauen, bei dem mehrere Kopien eines Blockdevices hostübergreifend konsistent gehalten werden, um Ausfallsicherheit zu schaffen.
+Parametern und Einstellungen erstellt. Hierbei wurden die Möglichkeiten der rein in Software ablaufenden Paravirtualisierung und der Hardware-gestützten Vollvirtualisierung (Hardware Virtual Maschine -- HVM) betrachtet. Um später Live-Migrationen durchführen zu können, ist es notwendig den Hintergrundspeicher der VMs über das Netz zur Verfügung zu stellen. Zu diesem Zweck wird in Kapitel \ref{chap:aoe} \emph{ATA-Over-Ethernet} (AoE) eingerichtet. Daraufhin finden in Kapitel \ref{migr} Versuche zur Live-Migration von VMs statt. Im darauf folgenden Kapitel \ref{vlan_trunk} wird ein internes Netz, auf das nur die VMs Zugriff haben, hostübergreifend mit Hilfe des OVS verfügbar gemacht. Den Abschluss der Arbeit bildet in Kapitel \ref{chap:drbd} ein Versuch ein \emph{Distributed Replicated Block Device} (DRBD) aufzubauen, bei dem mehrere Kopien eines Blockdevices hostübergreifend konsistent gehalten werden, um Ausfallsicherheit zu schaffen.
 
 \chapter{Vorarbeit}
 \label{chap:whezzy_ugprade}
@@ -34,15 +34,15 @@ in \verb#/etc/grub.d# erstellt, damit der Xen Hypervisor standardmäßig geladen
 \\
 Um die Konnektivität zum internen Netz der VMs nach dem Bootvorgang zu gewährleisten, haben wir die Konfiguration in \verb#/etc/network/interfaces# um \verb#eth0# erweitert. Darüber hinaus wurde der Nameserver in \verb#/etc/resolv.conf# auskommentiert, da dieser Probleme beim Auflösen von DNS-Einträgen außerhalb der Praktikumsumgebung hatte.
 
-Der nächste Schritt ist nun die Einrichtung eines Datenspeichers für unsere Virtuellen Maschinen.
+Der nächste Schritt ist nun die Einrichtung eines Datenspeichers für unsere virtuellen Maschinen.
 
 \chapter{Storage}\label{chap:stor}
-Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen \emph{Redundant Array of Independent Disks} (RAID) Verbund über zwei Festplatten zu erzeugen (vgl. Abschnitt \ref{raid}). Wir entschieden uns für RAID Level 1. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem \emph{Logical Volume Manager} (LVM) erzeugte \emph{Logical Volumes} (LV) dienen, was in Abschnitt \ref{lvm} umgesetzt wird.
+Um einen Datenspeicher für spätere virtuelle Maschinen zu erhalten, entschlossen wir uns einen \emph{Redundant Array of Independent Disks} (RAID) Verbund über zwei Festplatten zu erzeugen (vgl. Abschnitt \ref{raid}). Wir entschieden uns für RAID-Level 1. Dieser bietet durch die Spiegelung der Partitionen eine gewisse Daten- und Ausfallsicherheit. Als tatsächlicher Datenspeicher sollten schließlich mit dem \emph{Logical Volume Manager} (LVM) erzeugte \emph{Logical Volumes} (LV) dienen, was in Abschnitt \ref{lvm} umgesetzt wird.
 \section{RAID}
 \label{raid}
 Für einen RAID-Verbund werden mindestens zwei Festplatten benötigt, welche möglichst identisch sein sollten. Wir verwenden die Platten \verb#sdb# und \verb#sdc# auf \verb#pcvirt01#. \\
 Zum Erzeugen einer \emph{GUID Partition Table} (GPT) nutzten wir \verb#gdisk#, welches vorher installiert werden musste. \\ 
-Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, jedoch stellt GPT den designierten Nachfolgestandard für MBR-Partitionstabellen dar. Ein paar der Vorteile einer GPT Partitionstabelle gegenüber einer MBR Partitionstabelle sind\cite{gpt}:
+Zur reinen Erzeugung eines RAID Systems ist dies nicht zwingend erforderlich, jedoch stellt GPT den designierten Nachfolgestandard für MBR-Partitionstabellen dar. Ein paar der Vorteile einer GPT-Partitionstabelle gegenüber einer MBR-Partitionstabelle sind\cite{gpt}:
 \begin{itemize} 
 \item die Unterstützung von Laufwerken mit bis zu $2^{64}$ Sektoren,
 \item die Redundanz der Tabelle am Ende der Festplatte, die vor dem Verlust der Tabelle im Falle eines defekten Sektors schützt,
@@ -60,7 +60,7 @@ Diese Partitionstabelle wurde mit \verb#sgdisk -R# auf die 2. Platte übertragen
 sgdisk -R=/dev/sdc /dev/sdb
 sgdisk -G /dev/sdb
 \end{verbatim}
-Abschließend wurde der RAID-Verbund \verb#/dev/md1# über die beiden Partitionen \verb#/dev/sdb2# und \verb#/dev/sdc2# mit \verb#mdadm# erzeugt. Der Parameter \verb#-n# bezeichnet die Anzahl der Partitionen und \verb#-l# gibt den RAID Level an.
+Abschließend wurde der RAID-Verbund \verb#/dev/md1# über die beiden Partitionen \verb#/dev/sdb2# und \verb#/dev/sdc2# mit \verb#mdadm# erzeugt. Der Parameter \verb#-n# bezeichnet die Anzahl der Partitionen und \verb#-l# gibt den RAID-Level an.
 \setupVerbatim{bash}
 \begin{verbatim}
 mdadm --create /dev/md1 -n 2 -l 1 /dev/sdb2 /dev/sdc2
@@ -198,7 +198,7 @@ Anschließend wurde die Konfiguration, durch einen Neustart geladen. Die Konnekt
 Die grundlegenden Anforderungen an die Infrastruktur des Hostrechners sind damit erfüllt, sodass im nächsten Kapitel die erste VM erstellt werden kann.
 
 \chapter{Virtuelle Maschinen}\label{vms}
-Nachdem nun alle notwendigen Vorbereitungen abgeschlossen waren, konnte die erste \emph{virtuelle Maschine} (VM) erstellt werden. Dazu wurde das Kommando \verb#xen-create-image# genutzt, welches die Erstellung einer paravirtualisierten VM weitestgehend automatisiert. Es wird zuerst die VM \verb#guest1# mit dem Betriebssystem Debian Wheezy, anschließend dann \verb#guest2# mit Debian Squeezy erstellt.
+Nachdem nun alle notwendigen Vorbereitungen abgeschlossen worden waren, konnte die erste \emph{virtuelle Maschine} (VM) erstellt werden. Dazu wurde das Kommando \verb#xen-create-image# genutzt, welches die Erstellung einer paravirtualisierten VM weitestgehend automatisiert. Es wird zuerst die VM \verb#guest1# mit dem Betriebssystem Debian Wheezy, anschließend dann \verb#guest2# mit Debian Squeeze erstellt.
 \\
 Im Abschnitt \ref{hvm_vm} wird dann eine vollvirtualisierte VM \verb#guest4# wiederum mit Debian Wheezy erstellt. Bei dieser Vollvirtualisierung läuft das Gastbetriebssystem prinzipiell ohne Anpassungen an den Hypervisor. Um IO-Operationen zu beschleunigen werden jedoch spezielle Treiber für Netzschnittstellen und Festplatten verwendet. 
 \\
